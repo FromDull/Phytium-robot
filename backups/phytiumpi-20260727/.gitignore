@@ -1,0 +1,35 @@
+# Secrets and local runtime configuration
+.env
+*.env
+voice.env
+password.json
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Generated/runtime artifacts
+__pycache__/
+*.py[cod]
+build/
+install/
+log/
+logs/
+data/
+*.onnx
+*.bin
+*.pt
+*.pth
+*.elf
+*.o
+*.a
+*.so
+*.ko
+*.wav
+*.mp3
+*.mp4
+*.csv
+*.db
+*.sqlite

@@ -1,0 +1,15 @@
+[Unit]
+Description=Lightweight YOLO household object detector
+After=network.target lidar-web-viewer.service astra-ros2.service
+Wants=lidar-web-viewer.service
+
+[Service]
+Type=simple
+User=user
+WorkingDirectory=/home/user/rplidar_deploy
+ExecStart=/home/user/voice-env/bin/python /home/user/rplidar_deploy/yolo-detector.py --model /home/user/models/yolo26n-256.onnx --interval 0.4
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

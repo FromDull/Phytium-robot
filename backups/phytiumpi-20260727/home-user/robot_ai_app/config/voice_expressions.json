@@ -1,0 +1,14 @@
+{
+  "mapping": {
+    "idle": "smile",
+    "listening": "peek",
+    "wake": "hello",
+    "thinking": "peek",
+    "speaking": "happy",
+    "happy": "happy",
+    "gimbal": "surprised",
+    "look": "peek",
+    "confused": "dizzy",
+    "error": "angry"
+  }
+}

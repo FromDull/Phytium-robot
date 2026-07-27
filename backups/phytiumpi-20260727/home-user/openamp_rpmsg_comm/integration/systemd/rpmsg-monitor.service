@@ -1,0 +1,16 @@
+[Unit]
+Description=Read-only OpenAMP RPMsg browser observatory
+After=rpmsg-broker.service network.target
+Requires=rpmsg-broker.service
+PartOf=rpmsg-broker.service
+
+[Service]
+Type=simple
+User=user
+Group=user
+ExecStart=/usr/local/libexec/rpmsg-monitor --monitor-socket /run/rpmsg-broker/monitor.sock --html /usr/local/share/rpmsg-monitor/index.html --bind 0.0.0.0 --port 8092
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

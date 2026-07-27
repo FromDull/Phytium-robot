@@ -1,0 +1,19 @@
+[Unit]
+Description=Gimbal control daemon using the RPMsg broker
+After=rpmsg-broker.service
+Requires=rpmsg-broker.service
+PartOf=rpmsg-broker.service
+
+[Service]
+Type=simple
+User=root
+Group=user
+RuntimeDirectory=gimbal-daemon
+RuntimeDirectoryMode=0750
+ExecStart=/usr/local/libexec/gimbal-daemon --broker-socket /run/rpmsg-broker/rpmsg.sock --config /home/user/openamp_rpmsg_comm/gimbal.conf --socket /run/gimbal-daemon/gimbal.sock --limit-margin-deg 3
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

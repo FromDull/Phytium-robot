@@ -1,0 +1,11 @@
+[Unit]
+Description=Export read-only chassis telemetry from the RPMsg broker
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/user/openamp_rpmsg_comm/linux_user/chassis_state_bridge.py --socket /run/rpmsg-broker/rpmsg.sock --output /home/user/robot_data/chassis_state.json --rate 10
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

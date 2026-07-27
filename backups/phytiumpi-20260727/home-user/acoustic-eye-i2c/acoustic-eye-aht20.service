@@ -1,0 +1,15 @@
+[Unit]
+Description=AcousticEye AHT20 temperature and humidity reader
+After=multi-user.target
+
+[Service]
+Type=simple
+User=root
+RuntimeDirectory=acoustic-eye
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/python3 /home/user/acoustic-eye-i2c/aht20_reader.py --device /dev/i2c-3 --address 0x38 --output /run/acoustic-eye/aht20.json
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

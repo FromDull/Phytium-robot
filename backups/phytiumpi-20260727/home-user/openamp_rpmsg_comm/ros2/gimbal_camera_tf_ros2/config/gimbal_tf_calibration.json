@@ -1,0 +1,15 @@
+{
+  "state_file": "/root/robot_data/gimbal_tf_state.json",
+  "base_frame": "base_link",
+  "yaw_frame": "gimbal_yaw_link",
+  "pitch_frame": "gimbal_pitch_link",
+  "camera_frame": "camera_link",
+  "optical_frame": "camera_color_optical_frame",
+  "base_to_yaw_xyz": [0.0, 0.0, 0.1455],
+  "pitch_to_camera_xyz": [0.00295, 0.0, 0.038],
+  "yaw_sign": 1.0,
+  "pitch_sign": -1.0,
+  "yaw_offset_deg": 0.0,
+  "pitch_offset_deg": 0.0,
+  "maximum_state_age_s": 0.5
+}

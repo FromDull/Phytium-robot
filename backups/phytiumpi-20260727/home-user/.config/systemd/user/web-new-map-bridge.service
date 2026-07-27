@@ -1,0 +1,12 @@
+[Unit]
+Description=Validated web request bridge for starting a fresh SLAM map
+After=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/user/rplidar_deploy/web-new-map-bridge.py --request /run/user/1000/robot-web-requests/new_map_request.json --status /run/user/1000/robot-web-requests/new_map_status.json
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

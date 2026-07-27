@@ -1,0 +1,1 @@
+savedcmd_/home/user/ch341_module_src/ch341.ko := ld -r -EL  -maarch64elf -z noexecstack --no-warn-rwx-segments --build-id=sha1  -T scripts/module.lds -o /home/user/ch341_module_src/ch341.ko /home/user/ch341_module_src/ch341.o /home/user/ch341_module_src/ch341.mod.o;  true

@@ -1,0 +1,17 @@
+[Unit]
+Description=Phytium robot browser dashboard
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=user
+WorkingDirectory=/home/user/rplidar_deploy/web-viewer-restored-20260723
+Environment=ROS_DOMAIN_ID=10
+Environment=WEB_VIEWER_PORT=8080
+ExecStart=/usr/bin/bash /home/user/rplidar_deploy/web-viewer-restored-20260723/run-web-viewer.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

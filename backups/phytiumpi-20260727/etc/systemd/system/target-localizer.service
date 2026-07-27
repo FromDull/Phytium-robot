@@ -1,0 +1,17 @@
+[Unit]
+Description=YOLO aligned-depth 3D target localization
+After=docker.service astra-ros2.service yolo-detector.service
+Requires=docker.service
+Wants=astra-ros2.service yolo-detector.service
+
+[Service]
+Type=simple
+Environment=ROS_DOMAIN_ID=10
+ExecStart=/usr/bin/docker exec phytium_ros2 bash -lc 'source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/setup.bash && source /root/ros2_ws/install/target_localization_ros2/share/target_localization_ros2/package.bash && exec /root/ros2_ws/install/target_localization_ros2/lib/target_localization_ros2/target_localizer'
+ExecStop=/usr/bin/docker exec phytium_ros2 pkill -INT -f '/target_localization_ros2/target_localizer'
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

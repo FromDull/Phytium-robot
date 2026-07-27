@@ -1,0 +1,6 @@
+edge-tts
+funasr-onnx==0.4.2
+numpy
+pillow
+pyttsx3
+sherpa-onnx==1.13.4

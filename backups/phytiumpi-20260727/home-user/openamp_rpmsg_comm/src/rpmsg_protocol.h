@@ -1,0 +1,85 @@
+#ifndef RPMSG_PROTOCOL_H
+#define RPMSG_PROTOCOL_H
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#define RPMSG_FRAME_MAGIC 0xA5
+#define RPMSG_MAX_PAYLOAD 120
+#define BALANCE_TELEMETRY_VERSION 2U
+#define BALANCE_TELEMETRY_PAYLOAD_SIZE 60U
+#define GIMBAL_TELEMETRY_VERSION 1U
+#define GIMBAL_TELEMETRY_PAYLOAD_SIZE 68U
+#define SERVO_MOTION_TELEMETRY_VERSION 1U
+#define SERVO_MOTION_TELEMETRY_PAYLOAD_SIZE 32U
+#define IMU_TELEMETRY_VERSION 1U
+#define IMU_TELEMETRY_PAYLOAD_SIZE 52U
+#define CHASSIS_TELEMETRY_VERSION 1U
+#define CHASSIS_TELEMETRY_PAYLOAD_SIZE 44U
+
+typedef enum {
+    CMD_HEARTBEAT = 1,
+    CMD_CAN_ENABLE = 10,
+    CMD_CAN_ZERO_POSITION = 11,
+    CMD_CAN_PVT = 12,
+    CMD_CAN_SAFE_STOP = 13,
+    CMD_CAN_SET_MODE = 14,
+    CMD_CAN_INIT_MOTOR = 15,
+    CMD_MOTOR_TEST = 16,
+    CMD_CAN_SET_ORIGIN = 17,
+    CMD_CAN_TORQUE_TEST = 18,
+    CMD_CAN_MOTOR_FAULT = 19,
+    CMD_CAN_SPEED_DIAG = 20,
+    CMD_SERVO_SET4 = 30,
+    CMD_SERVO_CENTER = 31,
+    CMD_SERVO_POLARITY = 32,
+    CMD_SERVO_MOVE4 = 33,
+    CMD_SERVO_STATUS = 34,
+    CMD_SERVO_STOP = 35,
+    CMD_LEG_ENABLE = 36,
+    CMD_LEG_MOVE4 = 37,
+    CMD_SERVO_TEST_ONE = 38,
+    CMD_IMU_INIT = 40,
+    CMD_IMU_READ = 41,
+    CMD_IMU_TELEMETRY = 42,
+    CMD_IMU_CALIBRATE = 43,
+    CMD_BALANCE_ENABLE = 50,
+    CMD_BALANCE_DISABLE = 51,
+    CMD_BALANCE_STATUS = 52,
+    CMD_BALANCE_SET_TRIM = 53,
+    CMD_BALANCE_SET_GAINS = 54,
+    CMD_BALANCE_CONFIG = 55,
+    CMD_BALANCE_RESET_CONFIG = 56,
+    CMD_BALANCE_SET_SPEED_LIMIT = 57,
+    CMD_BALANCE_TELEMETRY = 58,
+    CMD_BALANCE_SET_FILTER = 59,
+    CMD_BALANCE_SET_POSTURE_PRIORITY = 60,
+    CMD_BALANCE_SET_TORQUE_LIMIT = 61,
+    CMD_CHASSIS_SET_VELOCITY = 62,
+    CMD_CHASSIS_STATUS = 63,
+    CMD_CHASSIS_SET_TRACK_WIDTH = 64,
+    CMD_BALANCE_SET_POSITION_HOLD = 65,
+    CMD_GIMBAL_ENABLE = 70,
+    CMD_GIMBAL_DISABLE = 71,
+    CMD_GIMBAL_SET_TARGET = 72,
+    CMD_GIMBAL_STATUS = 73,
+    CMD_GIMBAL_CALIBRATE_LIMIT = 74,
+    CMD_GIMBAL_SET_LIMITS = 75,
+    CMD_GIMBAL_RESET_LIMITS = 76,
+    CMD_GIMBAL_EMERGENCY_STOP = 77
+} CommandType;
+
+typedef struct {
+    uint8_t type;
+    uint8_t seq;
+    uint8_t length;
+    uint8_t payload[RPMSG_MAX_PAYLOAD];
+} RpmsgFrame;
+
+size_t rpmsg_encode(uint8_t type, uint8_t seq, const uint8_t *payload, uint8_t length,
+                    uint8_t *out, size_t out_size);
+bool rpmsg_decode(const uint8_t *data, size_t size, RpmsgFrame *frame);
+uint8_t rpmsg_checksum(const uint8_t *data, size_t size);
+
+#endif

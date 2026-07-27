@@ -1,0 +1,15 @@
+[Unit]
+Description=Export gimbal telemetry for the ROS2 camera TF publisher
+After=gimbal-daemon.service
+Requires=gimbal-daemon.service
+
+[Service]
+Type=simple
+User=user
+Group=user
+ExecStart=/usr/local/libexec/gimbal-tf-state-bridge --socket /run/gimbal-daemon/gimbal.sock --output /home/user/robot_data/gimbal_tf_state.json --rate 10
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=ROS2 dynamic TF for gimbal-mounted Astra camera
+After=docker.service astra-ros2.service gimbal-tf-state.service
+Requires=docker.service gimbal-tf-state.service
+Wants=astra-ros2.service
+
+[Service]
+Type=simple
+Environment=ROS_DOMAIN_ID=10
+ExecStart=/usr/bin/docker exec phytium_ros2 bash -lc 'source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/setup.bash && exec /root/ros2_ws/install/gimbal_camera_tf_ros2/lib/gimbal_camera_tf_ros2/gimbal_camera_tf'
+ExecStop=/usr/bin/docker exec phytium_ros2 bash -lc 'pkill -INT -f "[g]imbal_camera_tf_ros2/lib/gimbal_camera_tf_ros2/gimbal_camera_tf" || true'
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

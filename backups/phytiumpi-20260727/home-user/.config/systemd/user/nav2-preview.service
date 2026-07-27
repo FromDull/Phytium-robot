@@ -1,0 +1,15 @@
+[Unit]
+Description=Nav2 preview-only path planner
+After=default.target
+
+[Service]
+Type=exec
+Environment=ROS_DOMAIN_ID=10
+ExecStart=/home/user/rplidar_deploy/nav2-preview/run-nav2-preview.sh
+ExecStop=-/usr/bin/docker stop --time 10 nav2_preview
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

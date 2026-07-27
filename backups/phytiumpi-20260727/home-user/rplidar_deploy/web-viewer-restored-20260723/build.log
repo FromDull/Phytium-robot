@@ -1,0 +1,103 @@
+Sending build context to Docker daemon    832kB
+Step 1/4 : FROM lidar-web-viewer:humble
+ ---> 1a05338ad425
+Step 2/4 : RUN sed -i 's|https://mirrors.aliyun.com/ubuntu-ports|https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports|g' /etc/apt/sources.list     && apt-get update     && apt-get install -y --no-install-recommends python3-pil     && rm -rf /var/lib/apt/lists/*
+ ---> Running in c47c51754b33
+Get:1 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy InRelease [270 kB]
+Get:2 http://packages.ros.org/ros2/ubuntu jammy InRelease [4682 B]
+Get:3 http://packages.ros.org/ros2/ubuntu jammy/main Sources [1850 kB]
+Get:4 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates InRelease [128 kB]
+Get:5 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-backports InRelease [127 kB]
+Get:6 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-security InRelease [129 kB]
+Get:7 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/main arm64 Packages [1758 kB]
+Get:8 http://packages.ros.org/ros2/ubuntu jammy/main arm64 Packages [1778 kB]
+Get:9 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/multiverse arm64 Packages [224 kB]
+Get:10 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/universe arm64 Packages [17.2 MB]
+Get:11 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/restricted arm64 Packages [24.2 kB]
+Get:12 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 Packages [4282 kB]
+Get:13 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/universe arm64 Packages [1687 kB]
+Get:14 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/multiverse arm64 Packages [63.5 kB]
+Get:15 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/restricted arm64 Packages [7738 kB]
+Get:16 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-backports/main arm64 Packages [82.4 kB]
+Get:17 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-backports/universe arm64 Packages [33.7 kB]
+Get:18 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-security/multiverse arm64 Packages [56.7 kB]
+Get:19 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-security/universe arm64 Packages [1391 kB]
+Get:20 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-security/restricted arm64 Packages [7440 kB]
+Get:21 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-security/main arm64 Packages [3960 kB]
+Fetched 50.2 MB in 3min 7s (268 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  libimagequant0 liblcms2-2 libopenjp2-7 libraqm0 libwebpdemux2 libwebpmux3
+  mailcap mime-support
+Suggested packages:
+  liblcms2-utils python-pil-doc
+Recommended packages:
+  file python3-olefile
+The following NEW packages will be installed:
+  libimagequant0 liblcms2-2 libopenjp2-7 libraqm0 libwebpdemux2 libwebpmux3
+  mailcap mime-support python3-pil
+0 upgraded, 9 newly installed, 0 to remove and 127 not upgraded.
+Need to get 829 kB of archives.
+After this operation, 2764 kB of additional disk space will be used.
+Get:1 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/main arm64 libimagequant0 arm64 2.17.0-1 [34.4 kB]
+Get:2 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 liblcms2-2 arm64 2.12~rc1-2ubuntu0.1 [158 kB]
+Get:3 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/main arm64 libraqm0 arm64 0.7.0-4ubuntu1 [11.6 kB]
+Get:4 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 libwebpdemux2 arm64 1.2.2-2ubuntu0.22.04.2 [10.0 kB]
+Get:5 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 libwebpmux3 arm64 1.2.2-2ubuntu0.22.04.2 [20.9 kB]
+Get:6 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 mailcap all 3.70+nmu1ubuntu1.22.04.1 [23.9 kB]
+Get:7 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy/main arm64 mime-support all 3.66 [3696 B]
+Get:8 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 libopenjp2-7 arm64 2.4.0-6ubuntu0.5 [155 kB]
+Get:9 https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports jammy-updates/main arm64 python3-pil arm64 9.0.1-1ubuntu0.4 [412 kB]
+[91mdebconf: delaying package configuration, since apt-utils is not installed
+[0mFetched 829 kB in 12s (72.0 kB/s)
+Selecting previously unselected package libimagequant0:arm64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 38432 files and directories currently installed.)
+Preparing to unpack .../0-libimagequant0_2.17.0-1_arm64.deb ...
+Unpacking libimagequant0:arm64 (2.17.0-1) ...
+Selecting previously unselected package liblcms2-2:arm64.
+Preparing to unpack .../1-liblcms2-2_2.12~rc1-2ubuntu0.1_arm64.deb ...
+Unpacking liblcms2-2:arm64 (2.12~rc1-2ubuntu0.1) ...
+Selecting previously unselected package libraqm0:arm64.
+Preparing to unpack .../2-libraqm0_0.7.0-4ubuntu1_arm64.deb ...
+Unpacking libraqm0:arm64 (0.7.0-4ubuntu1) ...
+Selecting previously unselected package libwebpdemux2:arm64.
+Preparing to unpack .../3-libwebpdemux2_1.2.2-2ubuntu0.22.04.2_arm64.deb ...
+Unpacking libwebpdemux2:arm64 (1.2.2-2ubuntu0.22.04.2) ...
+Selecting previously unselected package libwebpmux3:arm64.
+Preparing to unpack .../4-libwebpmux3_1.2.2-2ubuntu0.22.04.2_arm64.deb ...
+Unpacking libwebpmux3:arm64 (1.2.2-2ubuntu0.22.04.2) ...
+Selecting previously unselected package mailcap.
+Preparing to unpack .../5-mailcap_3.70+nmu1ubuntu1.22.04.1_all.deb ...
+Unpacking mailcap (3.70+nmu1ubuntu1.22.04.1) ...
+Selecting previously unselected package mime-support.
+Preparing to unpack .../6-mime-support_3.66_all.deb ...
+Unpacking mime-support (3.66) ...
+Selecting previously unselected package libopenjp2-7:arm64.
+Preparing to unpack .../7-libopenjp2-7_2.4.0-6ubuntu0.5_arm64.deb ...
+Unpacking libopenjp2-7:arm64 (2.4.0-6ubuntu0.5) ...
+Selecting previously unselected package python3-pil:arm64.
+Preparing to unpack .../8-python3-pil_9.0.1-1ubuntu0.4_arm64.deb ...
+Unpacking python3-pil:arm64 (9.0.1-1ubuntu0.4) ...
+Setting up liblcms2-2:arm64 (2.12~rc1-2ubuntu0.1) ...
+Setting up libwebpdemux2:arm64 (1.2.2-2ubuntu0.22.04.2) ...
+Setting up libraqm0:arm64 (0.7.0-4ubuntu1) ...
+Setting up libimagequant0:arm64 (2.17.0-1) ...
+Setting up libopenjp2-7:arm64 (2.4.0-6ubuntu0.5) ...
+Setting up libwebpmux3:arm64 (1.2.2-2ubuntu0.22.04.2) ...
+Setting up mailcap (3.70+nmu1ubuntu1.22.04.1) ...
+Setting up mime-support (3.66) ...
+Setting up python3-pil:arm64 (9.0.1-1ubuntu0.4) ...
+Processing triggers for libc-bin (2.35-0ubuntu3.13) ...
+Removing intermediate container c47c51754b33
+ ---> ef7c074e7d50
+Step 3/4 : COPY server.py index.html semantic_map.py three.min.js /opt/lidar_web_viewer/
+ ---> 5e754e4ab443
+Step 4/4 : CMD ["bash", "-lc", "source /opt/ros/humble/setup.bash && exec python3 /opt/lidar_web_viewer/server.py"]
+ ---> Running in bb2aa9c891ed
+Removing intermediate container bb2aa9c891ed
+ ---> 26ee85301226
+Successfully built 26ee85301226
+Successfully tagged lidar-web-viewer:restored-20260723

@@ -1,0 +1,15 @@
+[Unit]
+Description=2D LiDAR GICP odometry
+After=docker.service rplidar.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=user
+Environment=ROS_DOMAIN_ID=10
+ExecStart=/home/user/rplidar_deploy/odometry/run-odometry.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

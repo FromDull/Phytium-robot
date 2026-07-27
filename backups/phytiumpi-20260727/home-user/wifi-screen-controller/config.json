@@ -1,0 +1,28 @@
+{
+  "serial_device": "/dev/ttyAMA2",
+  "baudrate": 115200,
+  "screen_encoding": "gbk",
+  "wifi_interface": "wlan0",
+  "scan_interval_seconds": 15,
+  "status_interval_seconds": 2,
+  "system_refresh_interval_seconds": 1,
+  "list_page_size": 6,
+  "button_text_max_bytes": 64,
+  "page_name": "wifi",
+  "system_page_name": "system",
+  "home_page_name": "home",
+  "bluetooth_page_name": "bluetooth",
+  "expression_socket_path": "/run/wifi-screen/face.sock",
+  "expression_socket_mode": 438,
+  "bluetooth_list_size": 5,
+  "components": {
+    "current": "t_current",
+    "status": "t_status",
+    "selected": "t_selected",
+    "password": "t_password",
+    "page": "t_page",
+    "wifi_button_pattern": "b_wifi{}",
+    "previous": "b_prev",
+    "next": "b_next"
+  }
+}

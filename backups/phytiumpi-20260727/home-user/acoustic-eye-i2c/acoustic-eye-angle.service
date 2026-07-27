@@ -1,0 +1,15 @@
+[Unit]
+Description=AcousticEye STM32 I2C angle reader
+After=multi-user.target
+
+[Service]
+Type=simple
+User=root
+RuntimeDirectory=acoustic-eye
+RuntimeDirectoryMode=0755
+ExecStart=/usr/bin/python3 /home/user/acoustic-eye-i2c/angle_reader.py --device /dev/i2c-3 --address 0x42 --output /run/acoustic-eye/angle.json
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

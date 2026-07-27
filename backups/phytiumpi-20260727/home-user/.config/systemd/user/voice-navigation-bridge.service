@@ -1,0 +1,13 @@
+[Unit]
+Description=Voice destination bridge for preview-only web navigation
+After=robot-ai-voice.service
+Wants=robot-ai-voice.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/user/rplidar_deploy/voice-navigation-bridge.py --output /home/user/robot_data/voice_navigation_command.json
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

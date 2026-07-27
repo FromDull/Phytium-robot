@@ -1,0 +1,19 @@
+[Unit]
+Description=Robot AI Voice Assistant
+
+[Service]
+Type=simple
+TimeoutStartSec=0
+WorkingDirectory=/home/user/robot_ai_app
+EnvironmentFile=/home/user/.config/robot-ai/voice.env
+Environment=PYTHONUNBUFFERED=1
+Environment=OMP_NUM_THREADS=4
+Environment=OPENBLAS_NUM_THREADS=1
+ExecStartPre=/bin/sh -c 'until /usr/bin/arecord -l 2>/dev/null | grep -q "ASTRA Pro"; do sleep 2; done'
+ExecStart=/home/user/voice-env/bin/python -m robot_ai_app.voice_chat_demo --vad --vad-threshold 0.014 --vad-silence 0.8 --vad-channel 0 --vad-max-seconds 5 --vad-cooldown 2.5 --save-last-audio /home/user/last_voice.wav --paraformer-model /home/user/models/paraformer-zh-onnx --alsa-device hw:CARD=Pro,DEV=0 --wake-word 你好小飞 --wake-word 你好小菲 --wake-word 你好小非 --wake-word 你要好小飞 --camera-bridge-dir /home/user/robot_data --gimbal-step-deg 5 --doa-shadow --doa-state-file /run/acoustic-eye/angle.json --doa-window-seconds 0.8 --face-map /home/user/robot_ai_app/config/voice_expressions.json --face-socket /run/wifi-screen/face.sock --kws-model-dir /home/user/models/kws/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01 --kws-keywords-file /home/user/models/kws/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/robot_keywords.txt --kws-threads 1 --kws-score 1.5 --kws-threshold 0.20
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target

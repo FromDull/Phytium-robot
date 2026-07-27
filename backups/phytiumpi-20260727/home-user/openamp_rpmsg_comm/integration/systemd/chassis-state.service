@@ -1,0 +1,16 @@
+[Unit]
+Description=Export read-only chassis telemetry from the RPMsg broker
+After=rpmsg-broker.service
+Requires=rpmsg-broker.service
+PartOf=rpmsg-broker.service
+
+[Service]
+Type=simple
+User=user
+Group=user
+ExecStart=/usr/local/libexec/chassis-state-bridge --socket /run/rpmsg-broker/rpmsg.sock --output /home/user/robot_data/chassis_state.json --rate 10
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

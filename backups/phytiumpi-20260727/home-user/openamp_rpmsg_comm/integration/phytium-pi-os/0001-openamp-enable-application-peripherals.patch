@@ -1,0 +1,44 @@
+From 7e9ef0b81b54f70a7880b27e18368f36c04b56ed Mon Sep 17 00:00:00 2001
+From: cnvhk <cnvhk@localhost>
+Date: Mon, 13 Jul 2026 13:00:00 +0800
+Subject: [PATCH] openamp: enable application peripherals on Phytium Pi
+
+Enable the CAN, PWM, SPI, GPIO, IOMUX and DMA drivers required by the
+OpenAMP remote firmware application. Keep these settings in the preset
+configuration so regenerating sdkconfig does not discard them.
+
+Signed-off-by: cnvhk <cnvhk@localhost>
+---
+ .../phytiumpi_aarch64_firefly_openamp_core0.config | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/example/system/amp/openamp_for_linux/configs/phytiumpi_aarch64_firefly_openamp_core0.config b/example/system/amp/openamp_for_linux/configs/phytiumpi_aarch64_firefly_openamp_core0.config
+index 4133ed4d..84ac4601 100644
+--- a/example/system/amp/openamp_for_linux/configs/phytiumpi_aarch64_firefly_openamp_core0.config
++++ b/example/system/amp/openamp_for_linux/configs/phytiumpi_aarch64_firefly_openamp_core0.config
+@@ -1,9 +1,23 @@
+ # CONFIG_BOOT_WITH_FLUSH_CACHE is not set
+ CONFIG_TARGET_PHYTIUMPI=y
++CONFIG_TARGET_NAME="openamp_core0"
+ CONFIG_LOG_INFO=y
+ CONFIG_LOG_DISPALY_CORE_NUM=y
+ CONFIG_INTERRUPT_ROLE_SLAVE=y
+ CONFIG_USE_SERIAL=y
++CONFIG_USE_CAN=y
++CONFIG_USE_FCAN=y
++CONFIG_USE_PWM=y
++CONFIG_USE_FPWM=y
++CONFIG_USE_SPI=y
++CONFIG_USE_FSPIM=y
++CONFIG_USE_GPIO=y
++CONFIG_ENABLE_FGPIO=y
++CONFIG_USE_IOMUX=y
++CONFIG_ENABLE_IOPAD=y
++CONFIG_USE_DMA=y
++CONFIG_ENABLE_FDDMA=y
++CONFIG_DEBUG_ENABLE_ALL_WARNING=y
+ CONFIG_USE_AMP=y
+ CONFIG_USE_OPENAMP=y
+ CONFIG_USE_OPENAMP_IPI=y
+--
+2.43.0

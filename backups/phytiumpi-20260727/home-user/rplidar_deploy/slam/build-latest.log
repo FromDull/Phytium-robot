@@ -1,0 +1,292 @@
+Sending build context to Docker daemon  10.75kB
+Step 1/4 : FROM ros:humble-ros-base
+ ---> eeed06ccec4a
+Step 2/4 : RUN sed -i 's|http://ports.ubuntu.com/ubuntu-ports|https://mirrors.aliyun.com/ubuntu-ports|g' /etc/apt/sources.list     && apt-get update     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ros-humble-slam-toolbox     && rm -rf /var/lib/apt/lists/*
+ ---> Running in 022b8361e95b
+Get:1 http://packages.ros.org/ros2/ubuntu jammy InRelease [4682 B]
+Get:2 https://mirrors.aliyun.com/ubuntu-ports jammy InRelease [270 kB]
+Get:3 http://packages.ros.org/ros2/ubuntu jammy/main Sources [1850 kB]
+Get:4 https://mirrors.aliyun.com/ubuntu-ports jammy-updates InRelease [128 kB]
+Get:5 https://mirrors.aliyun.com/ubuntu-ports jammy-backports InRelease [127 kB]
+Get:6 https://mirrors.aliyun.com/ubuntu-ports jammy-security InRelease [129 kB]
+Get:7 https://mirrors.aliyun.com/ubuntu-ports jammy/universe arm64 Packages [17.2 MB]
+Get:8 http://packages.ros.org/ros2/ubuntu jammy/main arm64 Packages [1778 kB]
+Ign:7 https://mirrors.aliyun.com/ubuntu-ports jammy/universe arm64 Packages
+Get:9 https://mirrors.aliyun.com/ubuntu-ports jammy/multiverse arm64 Packages [224 kB]
+Get:10 https://mirrors.aliyun.com/ubuntu-ports jammy/restricted arm64 Packages [24.2 kB]
+Get:11 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 Packages [1758 kB]
+Get:12 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/multiverse arm64 Packages [63.5 kB]
+Get:13 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/universe arm64 Packages [1687 kB]
+Get:14 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 Packages [4282 kB]
+Get:15 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/restricted arm64 Packages [7738 kB]
+Get:16 https://mirrors.aliyun.com/ubuntu-ports jammy-backports/universe arm64 Packages [33.7 kB]
+Get:17 https://mirrors.aliyun.com/ubuntu-ports jammy-backports/main arm64 Packages [82.4 kB]
+Get:18 https://mirrors.aliyun.com/ubuntu-ports jammy-security/restricted arm64 Packages [7440 kB]
+Get:19 https://mirrors.aliyun.com/ubuntu-ports jammy-security/universe arm64 Packages [1391 kB]
+Get:20 https://mirrors.aliyun.com/ubuntu-ports jammy-security/main arm64 Packages [3960 kB]
+Get:21 https://mirrors.aliyun.com/ubuntu-ports jammy-security/multiverse arm64 Packages [56.7 kB]
+Get:7 https://mirrors.aliyun.com/ubuntu-ports jammy/universe arm64 Packages [17.2 MB]
+Fetched 36.7 MB in 18min 50s (32.5 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  autoconf automake autotools-dev gfortran-11
+  graphicsmagick-libmagick-dev-compat ibverbs-providers icu-devtools libamd2
+  libaom-dev libaom3 libassimp-dev libassimp5 libavahi-client3
+  libavahi-common-data libavahi-common3 libblas-dev libboost-all-dev
+  libboost-atomic-dev libboost-atomic1.74-dev libboost-atomic1.74.0
+  libboost-chrono-dev libboost-chrono1.74-dev libboost-chrono1.74.0
+  libboost-container-dev libboost-container1.74-dev libboost-container1.74.0
+  libboost-context-dev libboost-context1.74-dev libboost-context1.74.0
+  libboost-coroutine-dev libboost-coroutine1.74-dev libboost-coroutine1.74.0
+  libboost-date-time-dev libboost-date-time1.74-dev libboost-date-time1.74.0
+  libboost-dev libboost-exception-dev libboost-exception1.74-dev
+  libboost-fiber-dev libboost-fiber1.74-dev libboost-fiber1.74.0
+  libboost-filesystem-dev libboost-filesystem1.74-dev
+  libboost-filesystem1.74.0 libboost-graph-dev libboost-graph-parallel-dev
+  libboost-graph-parallel1.74-dev libboost-graph-parallel1.74.0
+  libboost-graph1.74-dev libboost-graph1.74.0 libboost-iostreams-dev
+  libboost-iostreams1.74-dev libboost-iostreams1.74.0 libboost-locale-dev
+  libboost-locale1.74-dev libboost-locale1.74.0 libboost-log-dev
+  libboost-log1.74-dev libboost-log1.74.0 libboost-math-dev
+  libboost-math1.74-dev libboost-math1.74.0 libboost-mpi-dev
+  libboost-mpi-python-dev libboost-mpi-python1.74-dev
+  libboost-mpi-python1.74.0 libboost-mpi1.74-dev libboost-mpi1.74.0
+  libboost-nowide-dev libboost-nowide1.74-dev libboost-nowide1.74.0
+  libboost-numpy-dev libboost-numpy1.74-dev libboost-numpy1.74.0
+  libboost-program-options-dev libboost-program-options1.74-dev
+  libboost-program-options1.74.0 libboost-python-dev libboost-python1.74-dev
+  libboost-python1.74.0 libboost-random-dev libboost-random1.74-dev
+  libboost-random1.74.0 libboost-regex-dev libboost-regex1.74-dev
+  libboost-regex1.74.0 libboost-serialization-dev
+  libboost-serialization1.74-dev libboost-serialization1.74.0
+  libboost-stacktrace-dev libboost-stacktrace1.74-dev
+  libboost-stacktrace1.74.0 libboost-system-dev libboost-system1.74-dev
+  libboost-system1.74.0 libboost-test-dev libboost-test1.74-dev
+  libboost-test1.74.0 libboost-thread-dev libboost-thread1.74-dev
+  libboost-thread1.74.0 libboost-timer-dev libboost-timer1.74-dev
+  libboost-timer1.74.0 libboost-tools-dev libboost-type-erasure-dev
+  libboost-type-erasure1.74-dev libboost-type-erasure1.74.0 libboost-wave-dev
+  libboost-wave1.74-dev libboost-wave1.74.0 libboost1.74-dev
+  libboost1.74-tools-dev libbrotli-dev libbtf1 libbz2-dev libcamd2 libcbor0.8
+  libccolamd2 libceres-dev libceres2 libcholmod3 libcolamd2 libcups2
+  libcurl4-openssl-dev libcxsparse3 libdav1d-dev libdav1d5 libde265-0
+  libde265-dev libdeflate-dev libdouble-conversion3 libdraco-dev libdraco4
+  libdrm-amdgpu1 libdrm-common libdrm-nouveau2 libdrm-radeon1 libdrm2 libedit2
+  libegl-dev libegl-mesa0 libegl1 libelf1 libevdev2 libevent-2.1-7
+  libevent-core-2.1-7 libevent-dev libevent-extra-2.1-7 libevent-openssl-2.1-7
+  libevent-pthreads-2.1-7 libexif-dev libexif12 libfabric1 libfido2-1
+  libfreetype-dev libgbm1 libgflags-dev libgflags2.2 libgfortran-11-dev
+  libgl-dev libgl1 libgl1-mesa-dev libgl1-mesa-dri libglapi-mesa libgles-dev
+  libgles1 libgles2 libglew-dev libglew2.2 libglu1-mesa libglu1-mesa-dev
+  libglvnd-core-dev libglvnd-dev libglvnd0 libglx-dev libglx-mesa0 libglx0
+  libgoogle-glog-dev libgoogle-glog0v5 libgraphics-magick-perl
+  libgraphicsmagick++-q16-12 libgraphicsmagick++1-dev libgraphicsmagick-q16-3
+  libgraphicsmagick1-dev libgudev-1.0-0 libheif-dev libheif1 libhwloc-dev
+  libhwloc-plugins libhwloc15 libibverbs-dev libibverbs1 libice-dev libicu-dev
+  libignition-cmake2-dev libignition-math6 libignition-math6-dev libinput-bin
+  libinput10 libjbig-dev libjpeg-dev libjpeg-turbo8-dev libjpeg8-dev
+  libjs-jquery-ui libklu1 liblapack-dev liblcms2-2 liblcms2-dev libldl2
+  libllvm15 libltdl-dev liblzma-dev libmd4c0 libmetis5 libminizip-dev
+  libminizip1 libmongoose2 libmtdev1 libnl-3-200 libnl-3-dev libnl-route-3-200
+  libnl-route-3-dev libnuma-dev libnuma1 libopengl-dev libopengl0
+  libopenmpi-dev libopenmpi3 libpciaccess0 libpcre2-16-0 libpmix-dev libpmix2
+  libpng-dev libpthread-stubs0-dev libqt5concurrent5 libqt5core5a libqt5dbus5
+  libqt5gui5 libqt5network5 libqt5opengl5 libqt5printsupport5 libqt5sql5
+  libqt5svg5 libqt5test5 libqt5widgets5 libqt5xml5 librbio2 librdmacm1
+  libsensors-config libsensors5 libsigsegv2 libsliplu1 libsm-dev libspqr2
+  libsuitesparse-dev libsuitesparseconfig5 libtbb-dev libtbb12 libtbbmalloc2
+  libtiff-dev libtiffxx5 libucx0 libumfpack5 libvulkan-dev libvulkan1
+  libwacom-common libwacom9 libwayland-client0 libwayland-server0 libwebp-dev
+  libwebpdemux2 libwebpmux3 libwmf-0.2-7 libwmf-dev libwmflite-0.2-7
+  libx11-dev libx11-xcb1 libx265-199 libx265-dev libxau-dev libxaw7-dev
+  libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-icccm4 libxcb-image0
+  libxcb-keysyms1 libxcb-present0 libxcb-randr0 libxcb-render-util0
+  libxcb-shape0 libxcb-sync1 libxcb-util1 libxcb-xfixes0 libxcb-xinerama0
+  libxcb-xinput0 libxcb-xkb1 libxcb1-dev libxdmcp-dev libxext-dev libxfixes3
+  libxkbcommon-x11-0 libxkbcommon0 libxml2-dev libxmu-dev libxmu-headers
+  libxnvctrl0 libxpm-dev libxrandr-dev libxrandr2 libxrender-dev libxshmfence1
+  libxt-dev libxxf86vm1 m4 mpi-default-bin mpi-default-dev ocl-icd-libopencl1
+  openmpi-bin openmpi-common openssh-client qt5-qmake qt5-qmake-bin
+  qtbase5-dev qtbase5-dev-tools qtchooser ros-humble-bond ros-humble-bondcpp
+  ros-humble-ignition-cmake2-vendor ros-humble-ignition-math6-vendor
+  ros-humble-image-transport ros-humble-interactive-markers
+  ros-humble-laser-geometry ros-humble-libcurl-vendor ros-humble-map-msgs
+  ros-humble-nav2-common ros-humble-nav2-map-server ros-humble-nav2-msgs
+  ros-humble-nav2-util ros-humble-resource-retriever
+  ros-humble-rviz-assimp-vendor ros-humble-rviz-common
+  ros-humble-rviz-default-plugins ros-humble-rviz-ogre-vendor
+  ros-humble-rviz-rendering ros-humble-smclib shared-mime-info uuid-dev
+  x11proto-core-dev x11proto-dev xkb-data xorg-sgml-doctools xtrans-dev
+Suggested packages:
+  autoconf-archive gnu-standards autoconf-doc libtool gettext gfortran-11-doc
+  libcoarrays-dev liblapack-doc libboost-doc libboost1.74-doc gccxml
+  libboost-contract1.74-dev libmpfrc++-dev libntl-dev xsltproc doxygen
+  docbook-xml docbook-xsl default-jdk fop cups-common libcurl4-doc
+  libidn11-dev libkrb5-dev libldap2-dev librtmp-dev libssh2-1-dev
+  freetype2-doc glew-utils graphicsmagick-dbg graphicsmagick libice-doc
+  icu-doc libjs-jquery-ui-docs liblcms2-utils libtool-doc liblzma-doc
+  openmpi-doc pciutils qt5-image-formats-plugins qtwayland5 lm-sensors
+  libsm-doc libtbb-doc libwmf-0.2-7-gtk libwmf-doc libx11-doc libx265-doc
+  libxaw-doc libxcb-doc libxext-doc libxt-doc m4-doc opencl-icd gfortran
+  | fortran-compiler keychain libpam-ssh monkeysphere ssh-askpass
+  default-libmysqlclient-dev firebird-dev libpq-dev unixodbc-dev
+Recommended packages:
+  bzip2-doc libexif-doc libgl1-amber-dri ghostscript gsfonts javascript-common
+  libtool libcoarrays-openmpi-dev libpng-tools qttranslations5-l10n
+  qt5-gtk-platformtheme libqt5sql5-sqlite | libqt5sql5-mysql | libqt5sql5-odbc
+  | libqt5sql5-psql | libqt5sql5-tds | libqt5sql5-ibase libgraphblas-dev
+  mesa-vulkan-drivers | vulkan-icd libwacom-bin fonts-urw-base35 xauth
+  libqt5opengl5-dev
+The following NEW packages will be installed:
+  autoconf automake autotools-dev gfortran-11
+  graphicsmagick-libmagick-dev-compat ibverbs-providers icu-devtools libamd2
+  libaom-dev libaom3 libassimp-dev libassimp5 libavahi-client3
+  libavahi-common-data libavahi-common3 libblas-dev libboost-all-dev
+  libboost-atomic-dev libboost-atomic1.74-dev libboost-atomic1.74.0
+  libboost-chrono-dev libboost-chrono1.74-dev libboost-chrono1.74.0
+  libboost-container-dev libboost-container1.74-dev libboost-container1.74.0
+  libboost-context-dev libboost-context1.74-dev libboost-context1.74.0
+  libboost-coroutine-dev libboost-coroutine1.74-dev libboost-coroutine1.74.0
+  libboost-date-time-dev libboost-date-time1.74-dev libboost-date-time1.74.0
+  libboost-dev libboost-exception-dev libboost-exception1.74-dev
+  libboost-fiber-dev libboost-fiber1.74-dev libboost-fiber1.74.0
+  libboost-filesystem-dev libboost-filesystem1.74-dev
+  libboost-filesystem1.74.0 libboost-graph-dev libboost-graph-parallel-dev
+  libboost-graph-parallel1.74-dev libboost-graph-parallel1.74.0
+  libboost-graph1.74-dev libboost-graph1.74.0 libboost-iostreams-dev
+  libboost-iostreams1.74-dev libboost-iostreams1.74.0 libboost-locale-dev
+  libboost-locale1.74-dev libboost-locale1.74.0 libboost-log-dev
+  libboost-log1.74-dev libboost-log1.74.0 libboost-math-dev
+  libboost-math1.74-dev libboost-math1.74.0 libboost-mpi-dev
+  libboost-mpi-python-dev libboost-mpi-python1.74-dev
+  libboost-mpi-python1.74.0 libboost-mpi1.74-dev libboost-mpi1.74.0
+  libboost-nowide-dev libboost-nowide1.74-dev libboost-nowide1.74.0
+  libboost-numpy-dev libboost-numpy1.74-dev libboost-numpy1.74.0
+  libboost-program-options-dev libboost-program-options1.74-dev
+  libboost-program-options1.74.0 libboost-python-dev libboost-python1.74-dev
+  libboost-python1.74.0 libboost-random-dev libboost-random1.74-dev
+  libboost-random1.74.0 libboost-regex-dev libboost-regex1.74-dev
+  libboost-regex1.74.0 libboost-serialization-dev
+  libboost-serialization1.74-dev libboost-serialization1.74.0
+  libboost-stacktrace-dev libboost-stacktrace1.74-dev
+  libboost-stacktrace1.74.0 libboost-system-dev libboost-system1.74-dev
+  libboost-system1.74.0 libboost-test-dev libboost-test1.74-dev
+  libboost-test1.74.0 libboost-thread-dev libboost-thread1.74-dev
+  libboost-thread1.74.0 libboost-timer-dev libboost-timer1.74-dev
+  libboost-timer1.74.0 libboost-tools-dev libboost-type-erasure-dev
+  libboost-type-erasure1.74-dev libboost-type-erasure1.74.0 libboost-wave-dev
+  libboost-wave1.74-dev libboost-wave1.74.0 libboost1.74-dev
+  libboost1.74-tools-dev libbrotli-dev libbtf1 libbz2-dev libcamd2 libcbor0.8
+  libccolamd2 libceres-dev libceres2 libcholmod3 libcolamd2 libcups2
+  libcurl4-openssl-dev libcxsparse3 libdav1d-dev libdav1d5 libde265-0
+  libde265-dev libdeflate-dev libdouble-conversion3 libdraco-dev libdraco4
+  libdrm-amdgpu1 libdrm-common libdrm-nouveau2 libdrm-radeon1 libdrm2 libedit2
+  libegl-dev libegl-mesa0 libegl1 libelf1 libevdev2 libevent-2.1-7
+  libevent-core-2.1-7 libevent-dev libevent-extra-2.1-7 libevent-openssl-2.1-7
+  libevent-pthreads-2.1-7 libexif-dev libexif12 libfabric1 libfido2-1
+  libfreetype-dev libgbm1 libgflags-dev libgflags2.2 libgfortran-11-dev
+  libgl-dev libgl1 libgl1-mesa-dev libgl1-mesa-dri libglapi-mesa libgles-dev
+  libgles1 libgles2 libglew-dev libglew2.2 libglu1-mesa libglu1-mesa-dev
+  libglvnd-core-dev libglvnd-dev libglvnd0 libglx-dev libglx-mesa0 libglx0
+  libgoogle-glog-dev libgoogle-glog0v5 libgraphics-magick-perl
+  libgraphicsmagick++-q16-12 libgraphicsmagick++1-dev libgraphicsmagick-q16-3
+  libgraphicsmagick1-dev libgudev-1.0-0 libheif-dev libheif1 libhwloc-dev
+  libhwloc-plugins libhwloc15 libibverbs-dev libibverbs1 libice-dev libicu-dev
+  libignition-cmake2-dev libignition-math6 libignition-math6-dev libinput-bin
+  libinput10 libjbig-dev libjpeg-dev libjpeg-turbo8-dev libjpeg8-dev
+  libjs-jquery-ui libklu1 liblapack-dev liblcms2-2 liblcms2-dev libldl2
+  libllvm15 libltdl-dev liblzma-dev libmd4c0 libmetis5 libminizip-dev
+  libminizip1 libmongoose2 libmtdev1 libnl-3-200 libnl-3-dev libnl-route-3-200
+  libnl-route-3-dev libnuma-dev libnuma1 libopengl-dev libopengl0
+  libopenmpi-dev libopenmpi3 libpciaccess0 libpcre2-16-0 libpmix-dev libpmix2
+  libpng-dev libpthread-stubs0-dev libqt5concurrent5 libqt5core5a libqt5dbus5
+  libqt5gui5 libqt5network5 libqt5opengl5 libqt5printsupport5 libqt5sql5
+  libqt5svg5 libqt5test5 libqt5widgets5 libqt5xml5 librbio2 librdmacm1
+  libsensors-config libsensors5 libsigsegv2 libsliplu1 libsm-dev libspqr2
+  libsuitesparse-dev libsuitesparseconfig5 libtbb-dev libtbb12 libtbbmalloc2
+  libtiff-dev libtiffxx5 libucx0 libumfpack5 libvulkan-dev libvulkan1
+  libwacom-common libwacom9 libwayland-client0 libwayland-server0 libwebp-dev
+  libwebpdemux2 libwebpmux3 libwmf-0.2-7 libwmf-dev libwmflite-0.2-7
+  libx11-dev libx11-xcb1 libx265-199 libx265-dev libxau-dev libxaw7-dev
+  libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-icccm4 libxcb-image0
+  libxcb-keysyms1 libxcb-present0 libxcb-randr0 libxcb-render-util0
+  libxcb-shape0 libxcb-sync1 libxcb-util1 libxcb-xfixes0 libxcb-xinerama0
+  libxcb-xinput0 libxcb-xkb1 libxcb1-dev libxdmcp-dev libxext-dev libxfixes3
+  libxkbcommon-x11-0 libxkbcommon0 libxml2-dev libxmu-dev libxmu-headers
+  libxnvctrl0 libxpm-dev libxrandr-dev libxrandr2 libxrender-dev libxshmfence1
+  libxt-dev libxxf86vm1 m4 mpi-default-bin mpi-default-dev ocl-icd-libopencl1
+  openmpi-bin openmpi-common openssh-client qt5-qmake qt5-qmake-bin
+  qtbase5-dev qtbase5-dev-tools qtchooser ros-humble-bond ros-humble-bondcpp
+  ros-humble-ignition-cmake2-vendor ros-humble-ignition-math6-vendor
+  ros-humble-image-transport ros-humble-interactive-markers
+  ros-humble-laser-geometry ros-humble-libcurl-vendor ros-humble-map-msgs
+  ros-humble-nav2-common ros-humble-nav2-map-server ros-humble-nav2-msgs
+  ros-humble-nav2-util ros-humble-resource-retriever
+  ros-humble-rviz-assimp-vendor ros-humble-rviz-common
+  ros-humble-rviz-default-plugins ros-humble-rviz-ogre-vendor
+  ros-humble-rviz-rendering ros-humble-slam-toolbox ros-humble-smclib
+  shared-mime-info uuid-dev x11proto-core-dev x11proto-dev xkb-data
+  xorg-sgml-doctools xtrans-dev
+0 upgraded, 355 newly installed, 0 to remove and 127 not upgraded.
+Need to get 156 MB of archives.
+After this operation, 886 MB of additional disk space will be used.
+Get:1 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 shared-mime-info arm64 2.1-2 [453 kB]
+Get:2 http://packages.ros.org/ros2/ubuntu jammy/main arm64 libignition-cmake2-dev arm64 2.19.0-1~jammy [201 kB]
+Get:3 https://mirrors.aliyun.com/ubuntu-ports jammy/universe arm64 libdouble-conversion3 arm64 3.1.7-4 [37.0 kB]
+Get:4 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libpcre2-16-0 arm64 10.39-3ubuntu0.1 [185 kB]
+Get:5 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/universe arm64 libqt5core5a arm64 5.15.3+dfsg-2ubuntu0.2 [1925 kB]
+Get:6 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-bond arm64 4.1.4-1jammy.20260605.120829 [50.3 kB]
+Get:7 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-smclib arm64 4.1.4-1jammy.20260317.155452 [15.0 kB]
+Get:8 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-bondcpp arm64 4.1.4-1jammy.20260607.080312 [116 kB]
+Get:9 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-ignition-cmake2-vendor arm64 0.0.2-2jammy.20260307.141206 [2202 B]
+Get:10 http://packages.ros.org/ros2/ubuntu jammy/main arm64 libignition-math6 arm64 6.16.0-1~jammy [92.7 kB]
+Get:11 http://packages.ros.org/ros2/ubuntu jammy/main arm64 libignition-math6-dev arm64 6.16.0-1~jammy [153 kB]
+Get:12 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-ignition-math6-vendor arm64 0.0.2-2jammy.20260307.141707 [2132 B]
+Get:13 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-image-transport arm64 3.1.13-1jammy.20260607.082811 [376 kB]
+Get:14 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-interactive-markers arm64 2.3.2-2jammy.20260605.175529 [196 kB]
+Get:15 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-laser-geometry arm64 2.4.1-1jammy.20260607.083300 [26.7 kB]
+Get:16 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-libcurl-vendor arm64 3.1.3-1jammy.20260307.145823 [7088 B]
+Get:17 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-map-msgs arm64 2.1.0-3jammy.20260605.125407 [135 kB]
+Get:18 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-nav2-common arm64 1.1.20-1jammy.20260605.150820 [10.2 kB]
+Get:19 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-nav2-msgs arm64 1.1.20-1jammy.20260605.153450 [773 kB]
+Get:20 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-nav2-util arm64 1.1.20-1jammy.20260607.100757 [149 kB]
+Get:21 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-nav2-map-server arm64 1.1.20-1jammy.20260607.131409 [195 kB]
+Get:22 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-resource-retriever arm64 3.1.3-1jammy.20260307.163942 [20.5 kB]
+Get:23 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-rviz-assimp-vendor arm64 11.2.27-1jammy.20260612.212525 [8418 B]
+Get:24 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-rviz-ogre-vendor arm64 11.2.27-1jammy.20260612.212417 [3509 kB]
+Get:25 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libdrm-common all 2.4.113-2~ubuntu0.22.04.1 [5450 B]
+Get:26 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libdrm2 arm64 2.4.113-2~ubuntu0.22.04.1 [39.1 kB]
+Get:27 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libglvnd0 arm64 1.4.0-1 [61.0 kB]
+Get:28 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libwayland-server0 arm64 1.20.0-1ubuntu0.1 [34.1 kB]
+Get:29 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-randr0 arm64 1.14-3ubuntu3 [18.4 kB]
+Get:30 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libgbm1 arm64 23.2.1-1ubuntu3.1~22.04.4 [33.8 kB]
+Get:31 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libglapi-mesa arm64 23.2.1-1ubuntu3.1~22.04.4 [50.7 kB]
+Get:32 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libwayland-client0 arm64 1.20.0-1ubuntu0.1 [25.4 kB]
+Get:33 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libx11-xcb1 arm64 2:1.7.5-1ubuntu0.3 [7822 B]
+Get:34 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-dri2-0 arm64 1.14-3ubuntu3 [7242 B]
+Get:35 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-dri3-0 arm64 1.14-3ubuntu3 [6922 B]
+Get:36 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-present0 arm64 1.14-3ubuntu3 [5724 B]
+Get:37 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-sync1 arm64 1.14-3ubuntu3 [9312 B]
+Get:38 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-xfixes0 arm64 1.14-3ubuntu3 [10.0 kB]
+Get:39 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxshmfence1 arm64 1.3-1build4 [5444 B]
+Get:40 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libegl-mesa0 arm64 23.2.1-1ubuntu3.1~22.04.4 [116 kB]
+Get:41 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libegl1 arm64 1.4.0-1 [28.8 kB]
+Get:42 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxcb-glx0 arm64 1.14-3ubuntu3 [26.1 kB]
+Get:43 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxfixes3 arm64 1:6.0.0-1 [11.4 kB]
+Get:44 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libxxf86vm1 arm64 1:1.1.4-1build3 [10.3 kB]
+Get:45 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libdrm-amdgpu1 arm64 2.4.113-2~ubuntu0.22.04.1 [19.8 kB]
+Get:46 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libdrm-nouveau2 arm64 2.4.113-2~ubuntu0.22.04.1 [17.5 kB]
+Get:47 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libdrm-radeon1 arm64 2.4.113-2~ubuntu0.22.04.1 [21.2 kB]
+Get:48 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libelf1 arm64 0.186-1ubuntu0.1 [50.8 kB]
+Get:49 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libedit2 arm64 3.1-20210910-1build1 [96.0 kB]
+Get:50 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libllvm15 arm64 1:15.0.7-0ubuntu0.22.04.3 [24.2 MB]
+Get:51 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-rviz-rendering arm64 11.2.27-1jammy.20260612.221745 [789 kB]
+Get:52 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-rviz-common arm64 11.2.27-1jammy.20260612.222303 [588 kB]
+Get:53 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-rviz-default-plugins arm64 11.2.27-1jammy.20260612.225252 [2104 kB]
+Get:54 http://packages.ros.org/ros2/ubuntu jammy/main arm64 ros-humble-slam-toolbox arm64 2.6.10-1jammy.20260613.004837 [1594 kB]
+Get:55 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libsensors-config all 1:3.6.0-7ubuntu1 [5274 B]
+Get:56 https://mirrors.aliyun.com/ubuntu-ports jammy/main arm64 libsensors5 arm64 1:3.6.0-7ubuntu1 [26.1 kB]
+Get:57 https://mirrors.aliyun.com/ubuntu-ports jammy-updates/main arm64 libgl1-mesa-dri arm64 23.2.1-1ubuntu3.1~22.04.4 [8099 kB]
