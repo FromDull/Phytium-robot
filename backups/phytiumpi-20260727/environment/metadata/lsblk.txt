@@ -1,0 +1,4 @@
+NAME         SIZE FSTYPE MOUNTPOINTS UUID
+mmcblk0     28.9G                    
+└─mmcblk0p1 28.8G        /           
+zram0        1.7G        [SWAP]      

@@ -1,0 +1,17 @@
+[Unit]
+Description=2D LiDAR scan-matched odometry
+After=docker.service rplidar.service rpmsg-broker.service
+Requires=docker.service rplidar.service
+
+[Service]
+Type=simple
+User=user
+Environment=ROS_DOMAIN_ID=10
+ExecStart=/home/user/rplidar_deploy/odometry/run-odometry.sh
+ExecStop=-/usr/bin/docker stop --time 10 lidar_odom
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

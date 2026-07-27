@@ -1,0 +1,2 @@
+backups/phytiumpi-20260727/environment/models/** filter=lfs diff=lfs merge=lfs -text
+backups/phytiumpi-20260727/environment/archives/*.tar.gz filter=lfs diff=lfs merge=lfs -text

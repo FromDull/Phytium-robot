@@ -33,3 +33,7 @@ data/
 *.csv
 *.db
 *.sqlite
+
+# The extended runtime backup intentionally stores model weights through Git LFS.
+!environment/models/
+!environment/models/**

@@ -1,0 +1,19 @@
+[Unit]
+Description=Phytium robot browser dashboard
+After=docker.service slam-toolbox.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=user
+WorkingDirectory=/home/user/rplidar_deploy/web-viewer
+Environment=ROS_DOMAIN_ID=10
+Environment=WEB_VIEWER_PORT=8080
+ExecStart=/usr/bin/bash /home/user/rplidar_deploy/web-viewer/run-web-viewer.sh
+ExecStop=-/usr/bin/docker stop --time 10 lidar_web_viewer
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

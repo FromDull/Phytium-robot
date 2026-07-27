@@ -1,0 +1,18 @@
+[Unit]
+Description=Astra Pro ROS2 Depth and Color Camera
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+TimeoutStartSec=0
+ExecStartPre=/bin/sh -c 'until docker inspect -f "{{.State.Running}}" phytium_ros2 2>/dev/null | grep -q true; do sleep 2; done'
+ExecStartPre=/bin/sh -c 'until test -e /dev/astra_pro && test -e /dev/v4l/by-id/usb-Astra_Pro_HD_Camera_Astra_Pro_HD_Camera-video-index0; do sleep 2; done'
+ExecStart=/usr/bin/docker exec phytium_ros2 bash -lc 'source /opt/ros/humble/setup.bash && source /root/ros2_ws/install/setup.bash && exec ros2 launch astra_camera_ros2 astra_camera.launch.py'
+ExecStop=/usr/bin/docker exec phytium_ros2 bash -lc "pkill -INT -f 'ros2 launch astra_camera_ros2 astra_camera.launch.py' || true"
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

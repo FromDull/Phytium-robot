@@ -1,0 +1,13 @@
+[Unit]
+Description=Initialize OpenAMP remote core and RPMsg character device
+After=local-fs.target systemd-modules-load.service
+ConditionPathExists=/home/user/openamp_core0.elf
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/openamp-initproc
+RemainAfterExit=yes
+TimeoutStartSec=20
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2 @@
+/etc/NetworkManager/system-connections/ANNA_FAVOUR 3349.nmconnection
+/etc/NetworkManager/system-connections/CNVHK.nmconnection

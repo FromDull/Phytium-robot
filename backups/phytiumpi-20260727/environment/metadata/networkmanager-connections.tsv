@@ -1,0 +1,6 @@
+ANNA_FAVOUR 3349:3d209b69-c4f4-42fa-ad66-c848c7c39e62:802-11-wireless:yes:wlan0
+lo:8ec4d457-4c13-4718-8d47-740c209d5396:loopback:no:lo
+docker0:a076e6c3-7762-4eee-b97a-4bcb70055f80:bridge:no:docker0
+有线连接 1:8f23816a-4b94-34f4-adbc-4aa9febb3057:802-3-ethernet:yes:
+有线连接 2:9695f388-2c17-3e7f-9eb4-70f5fadd27b0:802-3-ethernet:yes:
+CNVHK:2e5d3711-241d-40a8-a2e4-1b2c505e3dcb:802-11-wireless:yes:

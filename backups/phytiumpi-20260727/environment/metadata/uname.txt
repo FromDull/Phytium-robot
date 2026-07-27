@@ -1,0 +1,1 @@
+Linux phytiumpi 6.6.63-phytium-embedded-v3.1 #1 SMP PREEMPT Wed Apr 29 14:04:05 CST 2026 aarch64 GNU/Linux

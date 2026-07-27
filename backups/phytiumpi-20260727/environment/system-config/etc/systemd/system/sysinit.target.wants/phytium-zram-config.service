@@ -1,0 +1,19 @@
+# Phytium ZRAM configuration service
+# Create 1 + number of cores compressed block devices
+# This service may block the boot process for up to 30 sec
+
+[Unit]
+Description=Phytium ZRAM config
+DefaultDependencies=no
+After=local-fs.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/phytium/phytium-zram-config start
+ExecStop=/usr/lib/phytium/phytium-zram-config stop
+RemainAfterExit=yes
+TimeoutStartSec=30sec
+
+[Install]
+WantedBy=sysinit.target

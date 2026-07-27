@@ -1,0 +1,23 @@
+[Unit]
+Description=Phytium Pi Wi-Fi controller for TJC serial screen
+After=NetworkManager.service systemd-hciattach.service bluetooth.service
+Wants=NetworkManager.service systemd-hciattach.service bluetooth.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/user/wifi-screen-controller
+ExecStart=/usr/bin/python3 /home/user/wifi-screen-controller/main.py --config /home/user/wifi-screen-controller/config.json
+Restart=on-failure
+RestartSec=2
+User=root
+Group=root
+SupplementaryGroups=dialout netdev
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+RuntimeDirectory=wifi-screen
+RuntimeDirectoryMode=0755
+ReadWritePaths=/run/wifi-screen
+
+[Install]
+WantedBy=multi-user.target
