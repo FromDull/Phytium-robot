@@ -811,11 +811,21 @@ def _run_turn(
     if gimbal_result.recognized:
         if face is not None:
             face.show("gimbal")
-        print(f"Gimbal> {gimbal_result.reply}")
+        gimbal_reply = gimbal_result.reply
+        if gimbal_result.ok and gimbal_result.action == "enable" and doa_estimate is not None:
+            speaker_turn = execute_look_at_me(
+                doa_estimate.angle_deg if doa_estimate.valid else None,
+                executable=args.gimbalctl,
+                activation_wait_seconds=8.0,
+            )
+            print(f"Speaker turn after enable> {speaker_turn.reply}")
+            if speaker_turn.ok:
+                gimbal_reply = f"云台已启用，{speaker_turn.reply}"
+        print(f"Gimbal> {gimbal_reply}")
         if not args.no_tts:
             print("Generating speech...")
         tts_started = time.perf_counter()
-        speak(gimbal_result.reply, enabled=not args.no_tts)
+        speak(gimbal_reply, enabled=not args.no_tts)
         if face is not None:
             # A setting/action result remains visible until the next voice state.
             # Avoiding a short speaking transition also removes two screen writes.
@@ -826,7 +836,7 @@ def _run_turn(
             f"TTS {tts_elapsed:.2f}s | turn {time.perf_counter() - turn_started:.2f}s"
         )
         history.append({"role": "user", "content": user_text})
-        history.append({"role": "assistant", "content": gimbal_result.reply})
+        history.append({"role": "assistant", "content": gimbal_reply})
         return True
 
     if doa_estimate is not None:
