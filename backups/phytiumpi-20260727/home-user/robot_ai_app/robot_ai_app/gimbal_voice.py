@@ -13,7 +13,6 @@ import time
 FEEDBACK_MAX_AGE_MS = 500
 VOICE_LIMIT_INSET_DEG = 5.0
 DOA_DEADBAND_DEG = 4.0
-DOA_MAX_STEP_DEG = 45.0
 GIMBAL_QUERY_TIMEOUT_SECONDS = 5
 GIMBAL_MOTION_TIMEOUT_SECONDS = 20
 
@@ -255,12 +254,9 @@ def execute_look_at_me(
         delta = desired - yaw
         if abs(delta) < DOA_DEADBAND_DEG:
             return GimbalVoiceResult(True, True, "人物已在声源方向附近")
-        limited_delta = max(-DOA_MAX_STEP_DEG, min(DOA_MAX_STEP_DEG, delta))
-        target = max(safe_min, min(safe_max, yaw + limited_delta))
+        target = desired
         response = _run_gimbalctl(executable, "set", f"{target:.2f}", f"{pitch:.2f}")
         if response.get("ok"):
-            if abs(target - desired) >= 0.5:
-                return GimbalVoiceResult(True, True, f"已向声源方向渐进转动到{target:.0f}度")
             if abs(desired - requested) >= 0.5:
                 return GimbalVoiceResult(True, True, f"已朝声源转动，受安全限位保护为{target:.0f}度")
             return GimbalVoiceResult(True, True, f"已朝人物声源转动到{target:.0f}度")
