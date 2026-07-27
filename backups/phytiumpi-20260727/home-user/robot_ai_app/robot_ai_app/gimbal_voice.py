@@ -114,6 +114,31 @@ def _safe_limits(telemetry: dict, inset_deg: float = VOICE_LIMIT_INSET_DEG) -> t
     return yaw_min, yaw_max, pitch_min, pitch_max
 
 
+def _motion_feedback_reached(
+    executable: str,
+    target_yaw: float,
+    target_pitch: float,
+    position_tolerance_deg: float = 1.5,
+) -> bool:
+    """Confirm a command that settled just after the daemon wait window."""
+    try:
+        response = _run_gimbalctl(executable, "status")
+        telemetry, error = _active_telemetry(response)
+        if error or telemetry is None:
+            return False
+        position_ready = (
+            abs(float(telemetry["yaw_deg"]) - target_yaw) <= position_tolerance_deg
+            and abs(float(telemetry["pitch_deg"]) - target_pitch) <= position_tolerance_deg
+        )
+        speed_ready = (
+            abs(float(telemetry.get("yaw_speed_rpm", 999))) <= 5
+            and abs(float(telemetry.get("pitch_speed_rpm", 999))) <= 5
+        )
+        return position_ready and speed_ready
+    except Exception:
+        return False
+
+
 def _contains_any(text: str, phrases: tuple[str, ...]) -> bool:
     return any(phrase in text for phrase in phrases)
 
@@ -255,12 +280,23 @@ def execute_look_at_me(
         if abs(delta) < DOA_DEADBAND_DEG:
             return GimbalVoiceResult(True, True, "人物已在声源方向附近")
         target = desired
-        response = _run_gimbalctl(executable, "set", f"{target:.2f}", f"{pitch:.2f}")
-        if response.get("ok"):
+        try:
+            response = _run_gimbalctl(executable, "set", f"{target:.2f}", f"{pitch:.2f}")
+            motion_ok = bool(response.get("ok"))
+        except subprocess.TimeoutExpired:
+            response = {"ok": False, "error": "motion confirmation timed out"}
+            motion_ok = False
+        if not motion_ok:
+            motion_ok = _motion_feedback_reached(executable, target, pitch)
+        if motion_ok:
             if abs(desired - requested) >= 0.5:
                 return GimbalVoiceResult(True, True, f"已朝声源转动，受安全限位保护为{target:.0f}度")
             return GimbalVoiceResult(True, True, f"已朝人物声源转动到{target:.0f}度")
-        return GimbalVoiceResult(True, False, "云台没有执行声源转向")
+        return GimbalVoiceResult(
+            True,
+            False,
+            f"云台没有执行声源转向：{response.get('error', '状态异常')}",
+        )
     except Exception as error:
         return GimbalVoiceResult(True, False, f"云台声源转向失败：{error}")
 
