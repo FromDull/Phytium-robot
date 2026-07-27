@@ -14,6 +14,8 @@ FEEDBACK_MAX_AGE_MS = 500
 VOICE_LIMIT_INSET_DEG = 5.0
 DOA_DEADBAND_DEG = 4.0
 DOA_MAX_STEP_DEG = 45.0
+GIMBAL_QUERY_TIMEOUT_SECONDS = 5
+GIMBAL_MOTION_TIMEOUT_SECONDS = 20
 
 
 @dataclass(frozen=True)
@@ -25,12 +27,18 @@ class GimbalVoiceResult:
 
 
 def _run_gimbalctl(executable: str, *arguments: object) -> dict:
+    command = str(arguments[0]) if arguments else ""
+    timeout_seconds = (
+        GIMBAL_MOTION_TIMEOUT_SECONDS
+        if command in {"set", "center"}
+        else GIMBAL_QUERY_TIMEOUT_SECONDS
+    )
     completed = subprocess.run(
         [executable, *(str(item) for item in arguments)],
         check=False,
         capture_output=True,
         text=True,
-        timeout=5,
+        timeout=timeout_seconds,
     )
     output = completed.stdout.strip()
     if not output:
