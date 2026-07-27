@@ -255,6 +255,9 @@ def record_wav_with_vad(
     max_blocks = max(1, int(max_seconds / 0.03))
     trigger_blocks = 4
     minimum_voiced_blocks = max(trigger_blocks, int(0.3 / 0.03))
+    heartbeat_blocks = max(1, int(60.0 / 0.03))
+    idle_blocks = 0
+    idle_peak_rms = 0.0
 
     cache_key = (device, samplerate, channel)
     cached_threshold = _VAD_THRESHOLD_CACHE.get(cache_key)
@@ -308,13 +311,7 @@ def record_wav_with_vad(
             _VAD_THRESHOLD_CACHE[cache_key] = (noise_floor, effective_threshold)
         else:
             noise_floor, effective_threshold = cached_threshold
-        # Ambient fan/room noise can drift upward after the one-second
-        # calibration. Keep release close enough to the trigger threshold to
-        # end an utterance, while retaining hysteresis for quiet syllables.
-        release_threshold = min(
-            effective_threshold * 0.97,
-            max(noise_floor * 1.4, effective_threshold * 0.94),
-        )
+        release_threshold = _vad_release_threshold(noise_floor, effective_threshold)
         print(
             f"Listening... noise={noise_floor:.4f}, threshold={effective_threshold:.4f}, "
             f"release={release_threshold:.4f}. "
@@ -333,6 +330,15 @@ def record_wav_with_vad(
 
             if not started:
                 pre_roll.append(mono16)
+                idle_blocks += 1
+                idle_peak_rms = max(idle_peak_rms, rms)
+                if idle_blocks >= heartbeat_blocks:
+                    print(
+                        f"Listening heartbeat> rms={rms:.4f}, peak60s={idle_peak_rms:.4f}, "
+                        f"threshold={effective_threshold:.4f}"
+                    )
+                    idle_blocks = 0
+                    idle_peak_rms = 0.0
                 candidate_blocks = candidate_blocks + 1 if rms >= effective_threshold else 0
                 if candidate_blocks >= trigger_blocks:
                     print("Speech detected.")
@@ -361,6 +367,8 @@ def record_wav_with_vad(
                     candidate_blocks = 0
                     voiced_blocks = 0
                     silent_blocks = 0
+                    idle_blocks = 0
+                    idle_peak_rms = 0.0
                     continue
                 break
             if len(captured) >= max_blocks:
@@ -380,6 +388,14 @@ def record_wav_with_vad(
         wav.writeframes(pcm16.tobytes())
     print(f"Captured speech audio: {len(pcm16) / samplerate:.2f}s")
     return speech_started_at, time.time()
+
+
+def _vad_release_threshold(noise_floor: float, trigger_threshold: float) -> float:
+    """Keep speech alive below the trigger level without following room noise."""
+    return min(
+        trigger_threshold * 0.85,
+        max(noise_floor * 1.15, trigger_threshold * 0.72),
+    )
 
 
 def record_wav_with_vad_retry(
@@ -812,20 +828,23 @@ def _run_turn(
         if face is not None:
             face.show("gimbal")
         gimbal_reply = gimbal_result.reply
-        if gimbal_result.ok and gimbal_result.action == "enable" and doa_estimate is not None:
-            speaker_turn = execute_look_at_me(
-                doa_estimate.angle_deg if doa_estimate.valid else None,
-                executable=args.gimbalctl,
-                activation_wait_seconds=8.0,
-            )
-            print(f"Speaker turn after enable> {speaker_turn.reply}")
-            if speaker_turn.ok:
-                gimbal_reply = f"云台已启用，{speaker_turn.reply}"
         print(f"Gimbal> {gimbal_reply}")
         if not args.no_tts:
             print("Generating speech...")
         tts_started = time.perf_counter()
         speak(gimbal_reply, enabled=not args.no_tts)
+        history_reply = gimbal_reply
+        if gimbal_result.ok and gimbal_result.action == "enable" and doa_estimate is not None:
+            # TTS overlaps the mechanical homing period. Once feedback becomes
+            # active, apply exactly one turn using the wake phrase's cached DoA.
+            speaker_turn = execute_look_at_me(
+                doa_estimate.angle_deg if doa_estimate.valid else None,
+                executable=args.gimbalctl,
+                activation_wait_seconds=20.0,
+            )
+            print(f"Speaker turn after enable> {speaker_turn.reply}")
+            if speaker_turn.ok:
+                history_reply = f"{gimbal_reply}；{speaker_turn.reply}"
         if face is not None:
             # A setting/action result remains visible until the next voice state.
             # Avoiding a short speaking transition also removes two screen writes.
@@ -836,7 +855,7 @@ def _run_turn(
             f"TTS {tts_elapsed:.2f}s | turn {time.perf_counter() - turn_started:.2f}s"
         )
         history.append({"role": "user", "content": user_text})
-        history.append({"role": "assistant", "content": gimbal_reply})
+        history.append({"role": "assistant", "content": history_reply})
         return True
 
     if doa_estimate is not None:
