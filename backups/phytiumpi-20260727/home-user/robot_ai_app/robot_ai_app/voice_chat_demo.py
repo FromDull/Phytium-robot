@@ -705,7 +705,6 @@ def _run_turn(
     doa_window_end: float | None = None
     audio_started_at: float | None = None
     doa_estimate = None
-    speaker_turn_done = False
     if args.text:
         user_text = args.text
         stt_elapsed = 0.0
@@ -774,12 +773,6 @@ def _run_turn(
                 )
                 if doa_window_end is not None:
                     doa_estimate = log_doa_shadow(args, direction_tracker, doa_window_end)
-                    speaker_turn = execute_look_at_me(
-                        doa_estimate.angle_deg if doa_estimate and doa_estimate.valid else None,
-                        executable=args.gimbalctl,
-                    )
-                    speaker_turn_done = True
-                    print(f"Speaker turn> {speaker_turn.reply}")
             print("Transcribing speech...")
             if face is not None:
                 face.show("thinking")
@@ -798,13 +791,8 @@ def _run_turn(
     if user_text is None:
         print(f"Ignored> wake word not found: {transcribed_text}")
         return True
-    if doa_window_end is not None and not speaker_turn_done:
+    if doa_window_end is not None and doa_estimate is None:
         doa_estimate = log_doa_shadow(args, direction_tracker, doa_window_end)
-        speaker_turn = execute_look_at_me(
-            doa_estimate.angle_deg if doa_estimate and doa_estimate.valid else None,
-            executable=args.gimbalctl,
-        )
-        print(f"Speaker turn> {speaker_turn.reply}")
     if not user_text:
         print("Wake word detected, but no command followed.")
         if face is not None:
@@ -815,24 +803,6 @@ def _run_turn(
         return True
 
     print(f"你> {user_text}")
-    if "看我" in "".join(user_text.split()):
-        detector = TargetDetector(state_url=args.perception_state_url,
-                                  detections_url=args.yolo_detections_url)
-        time.sleep(1.0)
-        person = detector.detect("person")
-        if person is None:
-            reply = "未识别到人物，保持当前声源方向"
-        elif person.box and person.image_width and person.image_height:
-            reply = refine_person_alignment(person.box, person.image_width, person.image_height,
-                                            executable=args.gimbalctl).reply
-        else:
-            reply = "已保持当前声源方向"
-        print(f"Gimbal> {reply}")
-        speak(reply, enabled=not args.no_tts)
-        history.append({"role": "user", "content": user_text})
-        history.append({"role": "assistant", "content": reply})
-        return True
-    intent = parse_user_intent(user_text)
     gimbal_result = execute_gimbal_voice_command(
         user_text,
         executable=args.gimbalctl,
@@ -859,6 +829,31 @@ def _run_turn(
         history.append({"role": "assistant", "content": gimbal_result.reply})
         return True
 
+    if doa_estimate is not None:
+        speaker_turn = execute_look_at_me(
+            doa_estimate.angle_deg if doa_estimate.valid else None,
+            executable=args.gimbalctl,
+        )
+        print(f"Speaker turn> {speaker_turn.reply}")
+
+    if "看我" in "".join(user_text.split()):
+        detector = TargetDetector(state_url=args.perception_state_url,
+                                  detections_url=args.yolo_detections_url)
+        time.sleep(1.0)
+        person = detector.detect("person")
+        if person is None:
+            reply = "未识别到人物，保持当前声源方向"
+        elif person.box and person.image_width and person.image_height:
+            reply = refine_person_alignment(person.box, person.image_width, person.image_height,
+                                            executable=args.gimbalctl).reply
+        else:
+            reply = "已保持当前声源方向"
+        print(f"Gimbal> {reply}")
+        speak(reply, enabled=not args.no_tts)
+        history.append({"role": "user", "content": user_text})
+        history.append({"role": "assistant", "content": reply})
+        return True
+    intent = parse_user_intent(user_text)
     visual_request = should_use_camera(user_text, intent)
     if face is not None and visual_request:
         face.show("look")

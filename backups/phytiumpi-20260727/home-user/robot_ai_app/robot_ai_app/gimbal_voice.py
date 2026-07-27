@@ -1,4 +1,4 @@
-"""Deterministic local voice commands for the gimbal daemon."""
+"""Deterministic, safety-bounded local voice commands for the gimbal."""
 
 from __future__ import annotations
 
@@ -7,6 +7,12 @@ import json
 import math
 import re
 import subprocess
+
+
+FEEDBACK_MAX_AGE_MS = 500
+VOICE_LIMIT_INSET_DEG = 5.0
+DOA_DEADBAND_DEG = 4.0
+DOA_MAX_STEP_DEG = 45.0
 
 
 @dataclass(frozen=True)
@@ -22,7 +28,7 @@ def _run_gimbalctl(executable: str, *arguments: object) -> dict:
         check=False,
         capture_output=True,
         text=True,
-        timeout=15,
+        timeout=5,
     )
     output = completed.stdout.strip()
     if not output:
@@ -34,73 +40,165 @@ def _run_gimbalctl(executable: str, *arguments: object) -> dict:
     return response
 
 
+def _chinese_number(text: str) -> float | None:
+    digits = {"零": 0, "〇": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4,
+              "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+    if not text:
+        return None
+    if "十" not in text:
+        if len(text) == 1 and text in digits:
+            return float(digits[text])
+        return None
+    tens, ones = text.split("十", 1)
+    tens_value = 1 if not tens else digits.get(tens)
+    ones_value = 0 if not ones else digits.get(ones)
+    if tens_value is None or ones_value is None:
+        return None
+    return float(tens_value * 10 + ones_value)
+
+
 def _step_degrees(text: str, default: float) -> float:
     match = re.search(r"(\d+(?:\.\d+)?)\s*(?:度|°)", text)
-    if match:
-        return min(float(match.group(1)), 10.0)
-    if any(word in text for word in ("大一点", "多一点")):
-        return min(default * 2.0, 10.0)
-    if any(word in text for word in ("一点", "一点点", "稍微")):
-        return default
-    return default
+    value = float(match.group(1)) if match else None
+    if value is None:
+        match = re.search(r"([零〇一二两三四五六七八九十]+)\s*(?:度|°)", text)
+        value = _chinese_number(match.group(1)) if match else None
+    if value is not None:
+        return max(0.5, min(value, 30.0))
+    if any(word in text for word in ("大幅", "大一点", "多一点", "多一些")):
+        return min(default * 2.0, 30.0)
+    if any(word in text for word in ("一点点", "稍微", "小幅")):
+        return max(1.0, min(default * 0.5, 5.0))
+    return max(0.5, min(default, 30.0))
+
+
+def _normalize_signed_angle(angle_deg: float) -> float:
+    value = (float(angle_deg) + 180.0) % 360.0 - 180.0
+    return 180.0 if value == -180.0 else value
+
+
+def _active_telemetry(status_response: dict, require_limits: bool = True) -> tuple[dict | None, str | None]:
+    telemetry = status_response.get("telemetry", {})
+    if not status_response.get("ok") or telemetry.get("state") != 3:
+        return None, "云台未启用，请先说启用云台"
+    if telemetry.get("fault") != 0 or telemetry.get("feedback_valid_mask") != 3:
+        return None, "云台反馈异常，已取消动作"
+    feedback_age = max(
+        int(telemetry.get("yaw_feedback_age_ms", FEEDBACK_MAX_AGE_MS)),
+        int(telemetry.get("pitch_feedback_age_ms", FEEDBACK_MAX_AGE_MS)),
+    )
+    if feedback_age >= FEEDBACK_MAX_AGE_MS:
+        return None, "云台反馈超时，已取消动作"
+    if require_limits and telemetry.get("limits_valid_mask") != 15:
+        return None, "云台机械限位无效，已取消动作"
+    return telemetry, None
+
+
+def _safe_limits(telemetry: dict, inset_deg: float = VOICE_LIMIT_INSET_DEG) -> tuple[float, float, float, float]:
+    inset = max(0.0, float(inset_deg))
+    yaw_min = float(telemetry["yaw_min_deg"]) + inset
+    yaw_max = float(telemetry["yaw_max_deg"]) - inset
+    pitch_min = float(telemetry["pitch_min_deg"]) + inset
+    pitch_max = float(telemetry["pitch_max_deg"]) - inset
+    if yaw_min >= yaw_max or pitch_min >= pitch_max:
+        raise ValueError("机械限位没有有效安全区间")
+    return yaw_min, yaw_max, pitch_min, pitch_max
+
+
+def _contains_any(text: str, phrases: tuple[str, ...]) -> bool:
+    return any(phrase in text for phrase in phrases)
 
 
 def execute_gimbal_voice_command(
     text: str,
     executable: str = "/usr/local/bin/gimbalctl",
-    default_step_deg: float = 2.0,
+    default_step_deg: float = 5.0,
 ) -> GimbalVoiceResult:
     normalized = "".join(text.lower().split())
 
-    if any(phrase in normalized for phrase in ("云台急停", "紧急停止云台", "相机急停")):
+    if _contains_any(normalized, ("云台急停", "紧急停止云台", "相机急停", "镜头急停")):
         try:
             response = _run_gimbalctl(executable, "estop")
             return GimbalVoiceResult(True, bool(response.get("ok")), "云台已急停")
         except Exception as error:
             return GimbalVoiceResult(True, False, f"云台急停失败：{error}")
 
-    command = ""
-    if any(phrase in normalized for phrase in ("云台回中", "镜头回中", "相机回中", "回到中间", "回正镜头")):
-        command = "center"
-    elif any(phrase in normalized for phrase in ("向左看", "往左看", "镜头向左", "云台向左", "相机向左")):
-        command = "left"
-    elif any(phrase in normalized for phrase in ("向右看", "往右看", "镜头向右", "云台向右", "相机向右")):
-        command = "right"
-    elif any(phrase in normalized for phrase in ("抬头", "向上看", "往上看", "镜头向上", "云台向上")):
-        command = "up"
-    elif any(phrase in normalized for phrase in ("低头", "向下看", "往下看", "镜头向下", "云台向下")):
-        command = "down"
-    else:
+    if _contains_any(normalized, ("启用云台", "打开云台", "启动云台", "开启云台")):
+        try:
+            response = _run_gimbalctl(executable, "enable", "--confirm")
+            return GimbalVoiceResult(
+                True,
+                bool(response.get("ok")),
+                "云台正在启用，请稍候" if response.get("ok") else f"云台启用失败：{response.get('error', '状态异常')}",
+            )
+        except Exception as error:
+            return GimbalVoiceResult(True, False, f"云台启用失败：{error}")
+
+    if _contains_any(normalized, ("关闭云台", "停用云台", "收起云台", "关闭镜头")):
+        try:
+            response = _run_gimbalctl(executable, "disable", "--confirm")
+            return GimbalVoiceResult(
+                True,
+                bool(response.get("ok")),
+                "云台正在安全回收并关闭" if response.get("ok") else f"云台关闭失败：{response.get('error', '状态异常')}",
+            )
+        except Exception as error:
+            return GimbalVoiceResult(True, False, f"云台关闭失败：{error}")
+
+    center = _contains_any(
+        normalized,
+        ("云台回中", "镜头回中", "相机回中", "回到中间", "回正镜头", "镜头回正", "看向正前方"),
+    )
+    left = _contains_any(
+        normalized,
+        ("向左看", "往左看", "镜头向左", "云台向左", "相机向左", "镜头左转", "云台左转", "相机左转", "左转镜头"),
+    )
+    right = _contains_any(
+        normalized,
+        ("向右看", "往右看", "镜头向右", "云台向右", "相机向右", "镜头右转", "云台右转", "相机右转", "右转镜头"),
+    )
+    up = _contains_any(
+        normalized,
+        ("抬头", "向上看", "往上看", "镜头向上", "云台向上", "相机向上", "抬高镜头"),
+    )
+    down = _contains_any(
+        normalized,
+        ("低头", "向下看", "往下看", "镜头向下", "云台向下", "相机向下", "降低镜头"),
+    )
+    if not (center or left or right or up or down):
         return GimbalVoiceResult(False)
+    if left and right or up and down:
+        return GimbalVoiceResult(True, False, "云台方向指令互相冲突，请重新说")
 
     try:
         status_response = _run_gimbalctl(executable, "status")
-        telemetry = status_response.get("telemetry", {})
-        if not status_response.get("ok") or telemetry.get("state") != 3:
-            return GimbalVoiceResult(True, False, "云台未启用，请先手动启用")
-        if telemetry.get("fault") != 0 or telemetry.get("feedback_valid_mask") != 3:
-            return GimbalVoiceResult(True, False, "云台状态异常，已取消动作")
+        telemetry, error = _active_telemetry(status_response)
+        if error:
+            return GimbalVoiceResult(True, False, error)
+        assert telemetry is not None
 
-        if command == "center":
+        if center:
             response = _run_gimbalctl(executable, "center")
-            reply = "镜头已回到中间"
+            reply = "镜头已回到正前方"
         else:
             step = _step_degrees(normalized, default_step_deg)
             yaw = float(telemetry["yaw_deg"])
             pitch = float(telemetry["pitch_deg"])
-            if command == "left":
-                yaw += step
-                reply = "镜头已向左转"
-            elif command == "right":
-                yaw -= step
-                reply = "镜头已向右转"
-            elif command == "up":
-                pitch += step
-                reply = "镜头已抬高"
-            else:
-                pitch -= step
-                reply = "镜头已降低"
-            response = _run_gimbalctl(executable, "set", f"{yaw:.2f}", f"{pitch:.2f}")
+            yaw_min, yaw_max, pitch_min, pitch_max = _safe_limits(telemetry)
+            target_yaw = yaw + step * (1 if left else -1 if right else 0)
+            target_pitch = pitch + step * (1 if up else -1 if down else 0)
+            target_yaw = max(yaw_min, min(yaw_max, target_yaw))
+            target_pitch = max(pitch_min, min(pitch_max, target_pitch))
+            if abs(target_yaw - yaw) < 0.25 and abs(target_pitch - pitch) < 0.25:
+                return GimbalVoiceResult(True, True, "镜头已到当前方向的安全限位")
+            response = _run_gimbalctl(executable, "set", f"{target_yaw:.2f}", f"{target_pitch:.2f}")
+            direction_parts = []
+            if left or right:
+                direction_parts.append("向左" if left else "向右")
+            if up or down:
+                direction_parts.append(("并" if direction_parts else "") + ("抬高" if up else "降低"))
+            directions = "".join(direction_parts)
+            reply = f"镜头已{directions}调整到水平{target_yaw:.0f}度、俯仰{target_pitch:.0f}度"
 
         if response.get("ok"):
             return GimbalVoiceResult(True, True, reply)
@@ -114,40 +212,32 @@ def execute_look_at_me(
     executable: str = "/usr/local/bin/gimbalctl",
     limit_inset_deg: float = 15.0,
 ) -> GimbalVoiceResult:
-    """Turn to a speaker bearing, inset from live mechanical limits."""
+    """Turn toward a calibrated speaker bearing with jitter and slew limits."""
     if doa_angle_deg is None or not math.isfinite(doa_angle_deg):
         return GimbalVoiceResult(True, False, "声源方向不可靠，未转动云台")
     try:
         status_response = _run_gimbalctl(executable, "status")
-        telemetry = status_response.get("telemetry", {})
-        if (not status_response.get("ok") or telemetry.get("state") != 3 or
-                telemetry.get("fault") != 0 or
-                telemetry.get("limits_valid_mask") != 15 or
-                telemetry.get("feedback_valid_mask") != 3 or
-                max(telemetry.get("yaw_feedback_age_ms", 999999),
-                    telemetry.get("pitch_feedback_age_ms", 999999)) >= 500):
-            return GimbalVoiceResult(True, False, "云台未处于安全可动作状态")
-
+        telemetry, error = _active_telemetry(status_response)
+        if error:
+            return GimbalVoiceResult(True, False, error)
+        assert telemetry is not None
         yaw = float(telemetry["yaw_deg"])
         pitch = float(telemetry["pitch_deg"])
-        yaw_min = float(telemetry["yaw_min_deg"])
-        yaw_max = float(telemetry["yaw_max_deg"])
-        safe_min = yaw_min + max(0.0, limit_inset_deg)
-        safe_max = yaw_max - max(0.0, limit_inset_deg)
-        if safe_min >= safe_max:
-            return GimbalVoiceResult(True, False, "云台机械限位无有效安全区间")
-        requested = float(doa_angle_deg)
-        target = max(safe_min, min(safe_max, requested))
-        if abs(target - yaw) < 1.0:
+        safe_min, safe_max, _, _ = _safe_limits(telemetry, limit_inset_deg)
+        requested = _normalize_signed_angle(doa_angle_deg)
+        desired = max(safe_min, min(safe_max, requested))
+        delta = desired - yaw
+        if abs(delta) < DOA_DEADBAND_DEG:
             return GimbalVoiceResult(True, True, "人物已在声源方向附近")
+        limited_delta = max(-DOA_MAX_STEP_DEG, min(DOA_MAX_STEP_DEG, delta))
+        target = max(safe_min, min(safe_max, yaw + limited_delta))
         response = _run_gimbalctl(executable, "set", f"{target:.2f}", f"{pitch:.2f}")
         if response.get("ok"):
-            if target != requested:
-                return GimbalVoiceResult(
-                    True, True,
-                    f"已朝声源方向转动，目标受机械限位保护为{target:.0f}度",
-                )
-            return GimbalVoiceResult(True, True, "已朝人物声源方向转动")
+            if abs(target - desired) >= 0.5:
+                return GimbalVoiceResult(True, True, f"已向声源方向渐进转动到{target:.0f}度")
+            if abs(desired - requested) >= 0.5:
+                return GimbalVoiceResult(True, True, f"已朝声源转动，受安全限位保护为{target:.0f}度")
+            return GimbalVoiceResult(True, True, f"已朝人物声源转动到{target:.0f}度")
         return GimbalVoiceResult(True, False, "云台没有执行声源转向")
     except Exception as error:
         return GimbalVoiceResult(True, False, f"云台声源转向失败：{error}")
@@ -155,19 +245,29 @@ def execute_look_at_me(
 
 def refine_person_alignment(box, width, height, executable="/usr/local/bin/gimbalctl") -> GimbalVoiceResult:
     try:
-        status = _run_gimbalctl(executable, "status").get("telemetry", {})
-        if status.get("state") != 3 or status.get("fault") != 0 or status.get("feedback_valid_mask") != 3:
-            return GimbalVoiceResult(True, False, "云台状态异常，停止对人微调")
-        x1, y1, x2, y2 = (float(v) for v in box)
+        if float(width) <= 0 or float(height) <= 0:
+            raise ValueError("invalid image size")
+        status_response = _run_gimbalctl(executable, "status")
+        status, error = _active_telemetry(status_response)
+        if error:
+            return GimbalVoiceResult(True, False, error)
+        assert status is not None
+        x1, y1, x2, y2 = (float(value) for value in box)
         yaw, pitch = float(status["yaw_deg"]), float(status["pitch_deg"])
-        # right-of-image requires negative yaw; use upper 20% of the person box as head reference.
-        yaw_step = max(-2.0, min(2.0, -((x1 + x2) * 0.5 - width * 0.5) / width * 60.0))
+        yaw_min, yaw_max, pitch_min, pitch_max = _safe_limits(status)
+        horizontal_error = ((x1 + x2) * 0.5 - width * 0.5) / width
         head_y = y1 + 0.2 * (y2 - y1)
-        # Use the full calibrated Pitch workspace for a large vertical error;
-        # the final target is still clamped below to the business safety range.
-        pitch_step = (height * 0.5 - head_y) / height * 50.0
-        target_yaw = max(-72.0, min(72.0, yaw + yaw_step))
-        target_pitch = max(-47.0, min(97.0, pitch + pitch_step))
+        vertical_error = (height * 0.5 - head_y) / height
+        yaw_step = max(-3.0, min(3.0, -horizontal_error * 60.0))
+        pitch_step = max(-6.0, min(6.0, vertical_error * 50.0))
+        if abs(horizontal_error) < 0.025:
+            yaw_step = 0.0
+        if abs(vertical_error) < 0.035:
+            pitch_step = 0.0
+        if yaw_step == 0.0 and pitch_step == 0.0:
+            return GimbalVoiceResult(True, True, "人物已位于画面中心")
+        target_yaw = max(yaw_min, min(yaw_max, yaw + yaw_step))
+        target_pitch = max(pitch_min, min(pitch_max, pitch + pitch_step))
         response = _run_gimbalctl(executable, "set", f"{target_yaw:.2f}", f"{target_pitch:.2f}")
         return GimbalVoiceResult(True, bool(response.get("ok")), "已根据人物位置微调云台" if response.get("ok") else "人物微调未执行")
     except Exception as error:
@@ -176,7 +276,11 @@ def refine_person_alignment(box, width, height, executable="/usr/local/bin/gimba
 
 def return_yaw_to_forward(executable="/usr/local/bin/gimbalctl") -> GimbalVoiceResult:
     try:
-        status = _run_gimbalctl(executable, "status").get("telemetry", {})
+        status_response = _run_gimbalctl(executable, "status")
+        status, error = _active_telemetry(status_response)
+        if error:
+            return GimbalVoiceResult(True, False, error)
+        assert status is not None
         response = _run_gimbalctl(executable, "set", "0.00", f"{float(status['pitch_deg']):.2f}")
         return GimbalVoiceResult(True, bool(response.get("ok")), "未识别到人物，云台已回正" if response.get("ok") else "云台回正未执行")
     except Exception as error:
