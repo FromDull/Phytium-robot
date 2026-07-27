@@ -692,21 +692,46 @@ def speak_with_pyttsx3(text: str) -> bool:
     return True
 
 
-def log_doa_shadow(args: argparse.Namespace, tracker: AcousticDirectionTracker | None, end_time: float):
+def log_doa_shadow(
+    args: argparse.Namespace,
+    tracker: AcousticDirectionTracker | None,
+    end_time: float,
+    speech_started_at: float | None = None,
+    speech_ended_at: float | None = None,
+):
     if tracker is None:
         return None
+    wake_window = min(args.doa_window_seconds, args.doa_wake_window_seconds)
     estimate = tracker.estimate(
         end_time=end_time,
-        window_seconds=min(args.doa_window_seconds, args.doa_wake_window_seconds),
+        window_seconds=wake_window,
     )
-    disposition = estimate.gimbal_disposition(-87.0, 87.0)
-    angle = "none" if estimate.angle_deg is None else f"{estimate.angle_deg:.1f}deg"
-    spread = "none" if estimate.circular_spread_deg is None else f"{estimate.circular_spread_deg:.1f}deg"
-    print(
-        f"DoA shadow> valid={estimate.valid} angle={angle} spread={spread} "
-        f"valid_ratio={estimate.valid_ratio:.2f} samples={estimate.valid_sample_count}/"
-        f"{estimate.sample_count} disposition={disposition} reason={estimate.reason}"
-    )
+
+    def describe(label: str, value) -> None:
+        disposition = value.gimbal_disposition(-87.0, 87.0)
+        angle = "none" if value.angle_deg is None else f"{value.angle_deg:.1f}deg"
+        spread = "none" if value.circular_spread_deg is None else f"{value.circular_spread_deg:.1f}deg"
+        print(
+            f"{label}> valid={value.valid} angle={angle} spread={spread} "
+            f"valid_ratio={value.valid_ratio:.2f} samples={value.valid_sample_count}/"
+            f"{value.sample_count} disposition={disposition} reason={value.reason}"
+        )
+
+    describe("DoA wake", estimate)
+    if (
+        not estimate.valid
+        and speech_started_at is not None
+        and speech_ended_at is not None
+        and speech_ended_at > speech_started_at
+    ):
+        utterance_window = min(3.0, max(1.2, speech_ended_at - speech_started_at))
+        fallback = tracker.estimate(
+            end_time=speech_ended_at,
+            window_seconds=utterance_window,
+        )
+        describe("DoA utterance fallback", fallback)
+        if fallback.valid:
+            estimate = fallback
     return estimate
 
 
@@ -720,6 +745,8 @@ def _run_turn(
     turn_started = time.perf_counter()
     doa_window_end: float | None = None
     audio_started_at: float | None = None
+    speech_started_at: float | None = None
+    speech_ended_at: float | None = None
     doa_estimate = None
     if args.text:
         user_text = args.text
@@ -788,7 +815,13 @@ def _run_turn(
                     "running full STT"
                 )
                 if doa_window_end is not None:
-                    doa_estimate = log_doa_shadow(args, direction_tracker, doa_window_end)
+                    doa_estimate = log_doa_shadow(
+                        args,
+                        direction_tracker,
+                        doa_window_end,
+                        speech_started_at,
+                        speech_ended_at,
+                    )
             print("Transcribing speech...")
             if face is not None:
                 face.show("thinking")
@@ -808,7 +841,13 @@ def _run_turn(
         print(f"Ignored> wake word not found: {transcribed_text}")
         return True
     if doa_window_end is not None and doa_estimate is None:
-        doa_estimate = log_doa_shadow(args, direction_tracker, doa_window_end)
+        doa_estimate = log_doa_shadow(
+            args,
+            direction_tracker,
+            doa_window_end,
+            speech_started_at,
+            speech_ended_at,
+        )
     if not user_text:
         print("Wake word detected, but no command followed.")
         if face is not None:
