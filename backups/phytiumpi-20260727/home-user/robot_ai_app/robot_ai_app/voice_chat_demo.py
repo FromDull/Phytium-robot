@@ -911,10 +911,14 @@ def _run_turn(
         person = detector.detect("person")
         if person is None:
             reply = "未识别到人物，保持当前声源方向"
-        elif person.box and person.image_width and person.image_height:
-            reply = refine_person_alignment(person.box, person.image_width, person.image_height,
-                                            executable=args.gimbalctl).reply
         else:
+            person_box = getattr(person, "box", None)
+            image_width = getattr(person, "image_width", None)
+            image_height = getattr(person, "image_height", None)
+        if person is not None and person_box and image_width and image_height:
+            reply = refine_person_alignment(person_box, image_width, image_height,
+                                            executable=args.gimbalctl).reply
+        elif person is not None:
             reply = "已保持当前声源方向"
         print(f"Gimbal> {reply}")
         speak(reply, enabled=not args.no_tts)

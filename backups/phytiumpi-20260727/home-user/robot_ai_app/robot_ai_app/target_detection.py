@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from collections import Counter
+from dataclasses import dataclass, replace
 import json
 import time
 from typing import Any
@@ -43,6 +42,9 @@ class DetectedTarget:
     image_path: str | None = None
     map_x: float | None = None
     map_y: float | None = None
+    box: tuple[float, float, float, float] | None = None
+    image_width: int | None = None
+    image_height: int | None = None
 
 
 @dataclass(frozen=True)
@@ -102,10 +104,24 @@ class TargetDetector:
         updated_at = raw.get("updated_at")
         fresh = updated_at is not None and time.time() - float(updated_at) <= self.maximum_age_s
         if raw.get("online") and not raw.get("error") and fresh:
-            detections = [
-                DetectedTarget(str(item.get("label", "unknown")), float(item.get("confidence", 0.0)))
-                for item in raw.get("detections", [])
-            ]
+            image_width = int(raw["source_width"]) if raw.get("source_width") is not None else None
+            image_height = int(raw["source_height"]) if raw.get("source_height") is not None else None
+            for item in raw.get("detections", []):
+                raw_box = item.get("box")
+                box = (
+                    tuple(float(value) for value in raw_box)
+                    if isinstance(raw_box, (list, tuple)) and len(raw_box) == 4
+                    else None
+                )
+                detections.append(
+                    DetectedTarget(
+                        str(item.get("label", "unknown")),
+                        float(item.get("confidence", 0.0)),
+                        box=box,
+                        image_width=image_width,
+                        image_height=image_height,
+                    )
+                )
         return targets_3d, detections
 
     def detect(self, target: str, image_path: str | None = None) -> DetectedTarget | None:
@@ -153,14 +169,27 @@ class TargetDetector:
     def _combine(
         targets_3d: list[DetectedTarget], detections: list[DetectedTarget]
     ) -> list[DetectedTarget]:
-        """Keep depth-enriched targets and raw YOLO targets not represented by them."""
-        combined = list(targets_3d)
-        represented = Counter(item.label for item in targets_3d)
-        seen = Counter()
-        for detection in detections:
-            seen[detection.label] += 1
-            if seen[detection.label] > represented[detection.label]:
-                combined.append(detection)
+        """Merge depth metadata with matching YOLO image-space geometry."""
+        combined: list[DetectedTarget] = []
+        remaining = list(detections)
+        for target in targets_3d:
+            match_index = next(
+                (index for index, item in enumerate(remaining) if item.label == target.label),
+                None,
+            )
+            if match_index is None:
+                combined.append(target)
+                continue
+            detection = remaining.pop(match_index)
+            combined.append(
+                replace(
+                    target,
+                    box=detection.box,
+                    image_width=detection.image_width,
+                    image_height=detection.image_height,
+                )
+            )
+        combined.extend(remaining)
         return combined
 
     @staticmethod
