@@ -29,7 +29,12 @@ from typing import Callable
 from .chat_policy import QwenChatPolicy
 from .acoustic_direction import AcousticDirectionTracker
 from .intent_parser import parse_user_intent
-from .gimbal_voice import execute_gimbal_voice_command, execute_look_at_me, refine_person_alignment
+from .gimbal_voice import (
+    execute_gimbal_voice_command,
+    execute_look_at_me,
+    execute_surroundings_scan,
+    refine_person_alignment,
+)
 from .qwen_policy import QwenPolicyError
 from .target_detection import TargetDetector
 from .expression_bridge import ExpressionBridge
@@ -140,6 +145,17 @@ def should_use_camera(text: str, intent) -> bool:
     return any(word in text for word in ("看看", "看一下", "观察", "前面有什么", "画面", "摄像头"))
 
 
+def is_surroundings_request(text: str) -> bool:
+    normalized = "".join(text.lower().split())
+    return any(
+        phrase in normalized
+        for phrase in (
+            "看看周围", "观察周围", "看看四周", "观察四周", "环顾四周",
+            "环顾周围", "周围有什么", "四周有什么", "巡视周围",
+        )
+    )
+
+
 def request_camera_image(shared_dir: str, timeout: float = 6.0) -> str | None:
     directory = Path(shared_dir).expanduser()
     directory.mkdir(parents=True, exist_ok=True)
@@ -171,6 +187,52 @@ def request_camera_image(shared_dir: str, timeout: float = 6.0) -> str | None:
         time.sleep(0.05)
     print("Vision> camera capture timed out")
     return None
+
+
+def capture_surroundings_composite(
+    shared_dir: str,
+    executable: str = "/usr/local/bin/gimbalctl",
+) -> tuple[str | None, str]:
+    directory = Path(shared_dir).expanduser()
+    token = str(time.time_ns())
+
+    def capture_view(yaw_deg: float, index: int) -> str | None:
+        print(f"Surroundings scan> capturing yaw={yaw_deg:.0f}deg")
+        captured = request_camera_image(shared_dir)
+        if not captured:
+            return None
+        destination = directory / f"surroundings_{token}_{index}_{yaw_deg:+.0f}.jpg"
+        shutil.copyfile(captured, destination)
+        return str(destination)
+
+    scan = execute_surroundings_scan(capture_view, executable=executable)
+    print(f"Surroundings scan> {scan.reply}")
+    if not scan.views:
+        return None, scan.reply
+    try:
+        from PIL import Image  # type: ignore
+
+        loaded = []
+        for yaw_deg, path in sorted(scan.views, key=lambda item: item[0]):
+            with Image.open(path) as image:
+                loaded.append((yaw_deg, image.convert("RGB").copy()))
+        target_height = min(image.height for _yaw, image in loaded)
+        resized = []
+        for yaw_deg, image in loaded:
+            width = max(1, round(image.width * target_height / image.height))
+            resized.append((yaw_deg, image.resize((width, target_height))))
+        separator = 4
+        canvas_width = sum(image.width for _yaw, image in resized) + separator * (len(resized) - 1)
+        canvas = Image.new("RGB", (canvas_width, target_height), "black")
+        x = 0
+        for _yaw, image in resized:
+            canvas.paste(image, (x, 0))
+            x += image.width + separator
+        output = directory / f"surroundings_{token}_composite.jpg"
+        canvas.save(output, "JPEG", quality=88)
+        return str(output), scan.reply
+    except (OSError, ValueError) as error:
+        return None, f"周围扫描图像合成失败：{error}"
 
 
 def record_wav(path: Path, seconds: float, samplerate: int, input_device: str | None = None) -> None:
@@ -561,26 +623,26 @@ def load_paraformer_model(model_dir: str):
     )
 
 
-def limit_tts_text(text: str, max_chars_per_sentence: int = 25, max_sentences: int = 2) -> str:
+def limit_tts_text(text: str, max_chars: int = 120, max_sentences: int = 4) -> str:
     """Bound spoken output without altering the full answer shown or stored."""
     normalized = re.sub(r"\s+", " ", text).strip()
-    if not normalized or max_chars_per_sentence <= 0 or max_sentences <= 0:
+    if not normalized or max_chars <= 0 or max_sentences <= 0:
         return ""
-
+    units = [
+        unit.strip()
+        for unit in re.findall(r"[^。！？!?；;\n]+[。！？!?；;]?", normalized)
+        if unit.strip()
+    ]
+    if len(normalized) <= max_chars and len(units) <= max_sentences:
+        return normalized
     spoken: list[str] = []
-    for unit in re.findall(r"[^。！？!?；;\n]+[。！？!?；;]?", normalized):
-        unit = unit.strip()
-        if not unit:
-            continue
-        ending = unit[-1] if unit[-1] in "。！？!?；;" else ""
-        content = unit[:-1].strip() if ending else unit
-        while content and len(spoken) < max_sentences:
-            chunk = content[:max_chars_per_sentence]
-            content = content[max_chars_per_sentence:]
-            spoken.append(chunk + (ending if not content and ending else "。"))
-        if len(spoken) >= max_sentences:
+    for unit in units[:max_sentences]:
+        if len("".join(spoken)) + len(unit) > max_chars:
             break
-    return "".join(spoken)
+        spoken.append(unit)
+    if spoken:
+        return "".join(spoken)
+    return normalized[: max(1, max_chars - 1)].rstrip("，,；;。") + "。"
 
 
 def speak(text: str, enabled: bool = True) -> None:
@@ -897,7 +959,8 @@ def _run_turn(
         history.append({"role": "assistant", "content": history_reply})
         return True
 
-    if doa_estimate is not None:
+    surroundings_request = is_surroundings_request(user_text)
+    if doa_estimate is not None and not surroundings_request:
         speaker_turn = execute_look_at_me(
             doa_estimate.angle_deg if doa_estimate.valid else None,
             executable=args.gimbalctl,
@@ -955,15 +1018,30 @@ def _run_turn(
         return True
 
     image_path = None
-    if args.camera_bridge_dir and visual_request:
+    scan_reply = ""
+    if args.camera_bridge_dir and surroundings_request:
+        print("Scanning surroundings with multiple camera views...")
+        image_path, scan_reply = capture_surroundings_composite(
+            args.camera_bridge_dir,
+            executable=args.gimbalctl,
+        )
+        if image_path is None:
+            speak(scan_reply, enabled=not args.no_tts)
+            history.append({"role": "user", "content": user_text})
+            history.append({"role": "assistant", "content": scan_reply})
+            return True
+    elif args.camera_bridge_dir and visual_request:
         print("Capturing camera image...")
         image_path = request_camera_image(args.camera_bridge_dir)
     print("Waiting for AI response...")
     if face is not None and not visual_request:
         face.show("thinking")
     llm_started = time.perf_counter()
+    policy_text = user_text
+    if surroundings_request and image_path:
+        policy_text += "。这是一张按左侧、前方、右侧排列的多视角拼图，请综合描述周围环境并避免重复计数。"
     decision = policy.decide_from_user(
-        user_text, DEMO_STATE, image_path=image_path, history=history, intent=intent
+        policy_text, DEMO_STATE, image_path=image_path, history=history, intent=intent
     )
     llm_elapsed = time.perf_counter() - llm_started
     print(f"AI> {decision.reply}")

@@ -8,6 +8,7 @@ import math
 import re
 import subprocess
 import time
+from typing import Callable
 
 
 FEEDBACK_MAX_AGE_MS = 500
@@ -23,6 +24,13 @@ class GimbalVoiceResult:
     ok: bool = False
     reply: str = ""
     action: str | None = None
+
+
+@dataclass(frozen=True)
+class GimbalScanResult:
+    ok: bool
+    reply: str
+    views: tuple[tuple[float, str], ...] = ()
 
 
 def _run_gimbalctl(executable: str, *arguments: object) -> dict:
@@ -137,6 +145,30 @@ def _motion_feedback_reached(
         return position_ready and speed_ready
     except Exception:
         return False
+
+
+def _set_target_confirmed(
+    executable: str,
+    target_yaw: float,
+    target_pitch: float,
+) -> tuple[bool, str]:
+    try:
+        response = _run_gimbalctl(
+            executable,
+            "set",
+            f"{target_yaw:.2f}",
+            f"{target_pitch:.2f}",
+        )
+        if response.get("ok"):
+            return True, ""
+        detail = str(response.get("error", "状态异常"))
+    except subprocess.TimeoutExpired:
+        detail = "运动确认超时"
+    except Exception as error:
+        detail = str(error)
+    if _motion_feedback_reached(executable, target_yaw, target_pitch):
+        return True, ""
+    return False, detail
 
 
 def _contains_any(text: str, phrases: tuple[str, ...]) -> bool:
@@ -280,14 +312,7 @@ def execute_look_at_me(
         if abs(delta) < DOA_DEADBAND_DEG:
             return GimbalVoiceResult(True, True, "人物已在声源方向附近")
         target = desired
-        try:
-            response = _run_gimbalctl(executable, "set", f"{target:.2f}", f"{pitch:.2f}")
-            motion_ok = bool(response.get("ok"))
-        except subprocess.TimeoutExpired:
-            response = {"ok": False, "error": "motion confirmation timed out"}
-            motion_ok = False
-        if not motion_ok:
-            motion_ok = _motion_feedback_reached(executable, target, pitch)
+        motion_ok, motion_error = _set_target_confirmed(executable, target, pitch)
         if motion_ok:
             if abs(desired - requested) >= 0.5:
                 return GimbalVoiceResult(True, True, f"已朝声源转动，受安全限位保护为{target:.0f}度")
@@ -295,7 +320,7 @@ def execute_look_at_me(
         return GimbalVoiceResult(
             True,
             False,
-            f"云台没有执行声源转向：{response.get('error', '状态异常')}",
+            f"云台没有执行声源转向：{motion_error}",
         )
     except Exception as error:
         return GimbalVoiceResult(True, False, f"云台声源转向失败：{error}")
@@ -343,3 +368,52 @@ def return_yaw_to_forward(executable="/usr/local/bin/gimbalctl") -> GimbalVoiceR
         return GimbalVoiceResult(True, bool(response.get("ok")), "未识别到人物，云台已回正" if response.get("ok") else "云台回正未执行")
     except Exception as error:
         return GimbalVoiceResult(True, False, f"云台回正失败：{error}")
+
+
+def execute_surroundings_scan(
+    capture_view: Callable[[float, int], str | None],
+    executable: str = "/usr/local/bin/gimbalctl",
+    scan_angle_deg: float = 60.0,
+) -> GimbalScanResult:
+    """Capture left/center/right views under live limits, then face forward."""
+    try:
+        status_response = _run_gimbalctl(executable, "status")
+        telemetry, error = _active_telemetry(status_response)
+        if error:
+            return GimbalScanResult(False, error)
+        assert telemetry is not None
+        yaw = float(telemetry["yaw_deg"])
+        pitch = float(telemetry["pitch_deg"])
+        yaw_min, yaw_max, pitch_min, pitch_max = _safe_limits(telemetry, 15.0)
+        pitch = max(pitch_min, min(pitch_max, pitch))
+        extent = max(15.0, min(abs(float(scan_angle_deg)), yaw_max, abs(yaw_min)))
+        center = max(yaw_min, min(yaw_max, 0.0))
+        targets = [-extent, center, extent]
+        if yaw > center:
+            targets.reverse()
+
+        views: list[tuple[float, str]] = []
+        scan_error = ""
+        for index, target in enumerate(targets):
+            if abs(target - yaw) >= 0.5:
+                moved, detail = _set_target_confirmed(executable, target, pitch)
+                if not moved:
+                    scan_error = f"扫描到{target:.0f}度失败：{detail}"
+                    break
+            yaw = target
+            path = capture_view(target, index)
+            if path:
+                views.append((target, path))
+
+        if abs(yaw - center) >= 0.5:
+            restored, detail = _set_target_confirmed(executable, center, pitch)
+            if not restored and not scan_error:
+                scan_error = f"扫描完成但回正失败：{detail}"
+
+        if not views:
+            return GimbalScanResult(False, scan_error or "周围扫描没有取得图像")
+        if scan_error:
+            return GimbalScanResult(False, scan_error, tuple(views))
+        return GimbalScanResult(True, "已完成左侧、前方和右侧的周围扫描", tuple(views))
+    except Exception as error:
+        return GimbalScanResult(False, f"周围扫描失败：{error}")
